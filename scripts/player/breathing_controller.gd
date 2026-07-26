@@ -21,6 +21,16 @@ class_name BreathingController
 ## why this isn't the bare "GameState" identifier). Under headless tests
 ## (bare, un-added instances), this is always null, so existing tests that
 ## call set_holding()/compute_velocity_y() directly are unaffected.
+##
+## Milestone 12: emits inhale_started exactly on the false -> true hold
+## transition (not on every hold call, not on release), for
+## scripts/audio/audio_controller.gd to play the inhale sound. This is a
+## plain signal with no audio dependency, keeping this script decoupled
+## from the AUDIO layer per ARCHITECTURE.md - whatever connects to it is
+## someone else's problem (see scripts/world/world.gd).
+
+## Emitted exactly when is_holding transitions from false to true.
+signal inhale_started
 
 ## Acceleration applied while holding, in px/s^2.
 var rise_acceleration: float = 900.0
@@ -37,7 +47,10 @@ var is_holding: bool = false
 ## touch/mouse events; tests call it directly to simulate hold/release
 ## without needing to synthesize InputEvents.
 func set_holding(value: bool) -> void:
+	var was_holding := is_holding
 	is_holding = value
+	if value and not was_holding:
+		inhale_started.emit()
 
 ## Physics-facing pure function: given the current vertical velocity and a
 ## timestep, returns the new vertical velocity. Reads only is_holding and

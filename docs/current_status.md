@@ -4,7 +4,7 @@ _Last updated: 2026-07-26_
 
 ## CURRENT MILESTONE
 
-Milestone 11 — UI and Game States
+Milestone 12 — Audio System
 
 ## STATUS
 
@@ -22,6 +22,9 @@ Milestone 9 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 Milestone 10 — COMPLETED
 Milestone 11 — PARTIALLY COMPLETED (logic done and tested where headlessly
 possible; full-flow and visual feel unverified)
+Milestone 12 — PARTIALLY COMPLETED (routing/settings logic done and
+tested; no real audio assets exist yet - genuine content gap, not a
+deferred check)
 
 ## BRANCH
 
@@ -29,87 +32,89 @@ possible; full-flow and visual feel unverified)
 
 ## LATEST STABLE COMMIT
 
-`92e5999` — "feat: wire GameState into full flow, add minimal HUD (Milestone 11)"
+(pending — this session's commit not yet made at time of writing; see
+`git log` for the actual latest hash)
 
 ## COMPLETED
 
-- Milestones 0-10: see ROADMAP.md and earlier CHANGELOG entries.
-- **Milestone 11 — GameState wired into a full flow, minimal UI:**
-  - `world.gd`: `step()` freezes (no-op) unless `GameState.is_playing()`.
-  - `world.gd`: `reset_session()` resets `scroll_manager`/`spawner` from
-    scratch, restores the player to `player_start_position` with zero
-    velocity and `is_holding = false`, clears all obstacles. Reached via
-    `_on_game_state_changed()`, connected to `GameState.state_changed`
-    lazily on the first `step()` call (not `_ready()` - avoids any
-    tree-entry timing dependency).
-  - `world.gd`: `is_tap_event()` (pure) + `_unhandled_input()` - tapping
-    while not playing transitions to `PLAYING` (covers both start and
-    restart with one gesture, since both are already-legal transitions).
-  - `breathing_controller.gd`: input now ignored unless `GameState.is_playing()`.
-  - `Hud` (`scripts/ui/hud.gd` + `hud.tscn`): single `Label`, pure
-    `compute_display_text(state, score, high_score)` for menu/playing/dead
-    text, thin `_process()` glue reading `World.get_current_score()`/
-    `get_high_score()`. Added as a child of `World`.
+- Milestones 0-11: see ROADMAP.md and earlier CHANGELOG entries.
+- **Milestone 12 — audio routing and settings:**
+  - `AudioSettings` (`scripts/audio/audio_settings.gd`): on/off setting,
+    `FileAccess`-backed at an overridable `save_path`, defaults to enabled.
+  - `AudioController` (`scripts/audio/audio_controller.gd` +
+    `audio_controller.tscn`): 4 `AudioStreamPlayer` children (Inhale,
+    Collision, GameOver, Music), all currently stream-less.
+    `play_inhale()`/`play_collision()`/`play_game_over()`/`start_music()`/
+    `stop_music()` gated by `AudioSettings.is_enabled()`, safe no-ops
+    without a stream.
+  - `breathing_controller.gd`: new `inhale_started` signal, fires exactly
+    on the false -> true hold transition.
+  - `world.gd`: wires `AudioController` in - inhale on hold-start
+    (structural signal connection, no tree/autoload dependency needed,
+    unlike the `GameState` connection); collision/game-over sounds at the
+    moment `check_obstacles()` reports death; music starts alongside
+    `reset_session()` on entering `PLAYING`.
+  - `world.tscn`: `AudioController` added as a child of `World`.
 
 ## TESTED
 
-- `tests/test_world.gd` extended (27/27, was 15/15): `reset_session()`
-  correctly resets (and `_on_game_state_changed()` correctly *doesn't*
-  reset for non-PLAYING transitions) when called directly;
-  `is_tap_event()` correctly classifies touch/mouse press/release and
-  button variants.
-- `tests/test_hud.gd` (8/8, new): scene structure; `compute_display_text()`
-  correct for all 3 states.
-- All previous tests still pass unchanged - 123 total assertions across
-  13 test files.
+- `tests/test_audio_settings.gd` (7/7): default-enabled, persistence,
+  toggle behavior, cleanup.
+- `tests/test_audio_controller.gd` (12/12): expected 4 stream-less
+  children present; every routing method safe to call with audio enabled
+  or disabled and no streams assigned.
+- `tests/test_breathing_controller.gd` extended (12/12, was 8/8):
+  `inhale_started` fires exactly once per hold-start, not on repeated
+  holds or release. (Caught and fixed a GDScript lambda-closure gotcha
+  along the way - local variables are captured by value, not reference,
+  so the signal-count test needed a single-element Array instead of a
+  plain int to actually observe mutations across calls.)
+- All previous tests still pass unchanged - 146 total assertions across
+  15 test files.
 - `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass, including the
-  real project-boot check with the HUD now present in the booted scene.
+  real project-boot check with `AudioController` now present.
+- Confirmed via direct inspection of the Godot user data directory that no
+  test artifacts (audio or otherwise) were left behind.
 
 ## NOT TESTED
 
 - Godot Editor GUI (deferred to PC).
 - Android SDK / export template setup.
-- **The autoload-gated code paths themselves**: `get_game_state()`,
-  the freeze-while-not-playing check, and the tap handler's
-  `if not game_state` early-out are only exercised by a real project boot.
-  **Confirmed via direct probe** (not just assumed) that `-s` script
-  mode's own `SceneTree.root` can't resolve absolute `/root/...` NodePaths
-  even when a `"GameState"`-named node is manually added to it - so this
-  isn't a gap that a cleverer headless test could close; it's a hard
-  constraint of the `-s` execution mode used for every test here.
-- **A full session end-to-end** (tap to start -> play -> die -> tap to
-  restart) has never been observed - requires an actual project boot with
-  real touch/mouse input, i.e. manual Android or PC testing.
-- Visual/feel verification carried over from Milestones 5, 6, 8, 9 - still
-  outstanding. This milestone adds its own untested territory on top: does
-  the HUD text read clearly, does tap-to-start/restart feel responsive,
-  does the freeze-on-death read correctly.
+- **Any actual sound** - there is no audio content in this environment at
+  all (no `.ogg`/`.wav` files under `assets/audio/`). This is a genuine
+  content gap, not a deferred verification: adding real inhale/collision/
+  game-over SFX and one music loop is pure PC asset work (assign streams
+  to the existing `AudioStreamPlayer` nodes) - no code changes needed.
+  `docs/pc_handoff.md` flags this explicitly.
+- The autoload-gated code paths and full-flow/visual verification carried
+  over from Milestones 5, 6, 8, 9, 11 - still outstanding.
 
 ## KNOWN ISSUES
 
 - RAM is tight on this device (~700 MiB "available" observed during
   discovery). Avoid heavy concurrent processes when running Godot.
-- Visual/feel + full-flow verification backlog now spans Milestones 5, 6,
-  8, 9, and 11. A full playable session exists for the first time as of
-  this milestone - this is a strong point to finally do that manual/PC
-  pass before adding more on top.
+- The visual/feel + full-flow verification backlog (Milestones 5, 6, 8, 9,
+  11) continues to grow. A dedicated PC/Android session is increasingly
+  the highest-value next step outside pure code work - this would also be
+  the natural time to add real audio assets for Milestone 12.
 
 ## BLOCKERS
 
 None for continuing code-first development. Android export tooling remains
-an open question (see `docs/android_build.md`).
+an open question (see `docs/android_build.md`). Real audio content is
+blocked on PC access (asset creation/sourcing), not on anything in this
+environment.
 
 ## NEXT ACTION
 
-Begin Milestone 12 (Audio System): inhale/collision/game-over sounds, one
-music loop, on/off setting. Given the size of the accumulated visual/feel
-verification backlog, strongly consider a dedicated PC or Android session
-before or alongside this milestone - Milestone 11 finally created a
-complete playable loop (start/play/die/restart) worth actually seeing and
-feeling.
+Begin Milestone 13 (Automated Validation and Testing): consolidate and
+review the existing headless test suite (15 files, 146 assertions) for
+coverage gaps now that most core systems exist. This is a good
+opportunity to also assess whether the accumulated visual/feel/audio
+backlog should be addressed via a PC/Android session before continuing
+further code-only milestones.
 
 ## NEXT ENVIRONMENT
 
-`[HYBRID]` (audio wiring is `[UBUNTU-CLI]`-able for the logic, but audio
-*feel* is inherently a `[MANUAL-ANDROID]`/`[PC-GODOT]` concern); a full
-manual/PC playtest pass is increasingly the highest-value next step
+`[UBUNTU-CLI]` (test suite consolidation); `[MANUAL-ANDROID]`/`[PC-GODOT]`
+increasingly high-value for the growing feel/audio-content backlog

@@ -29,20 +29,43 @@ Then:
 ## Current project state
 
 See `docs/current_status.md` — kept up to date after every session. As of
-this writing, the project is at Milestone 0/1 (environment validation +
-repository bootstrap); no gameplay code exists yet.
+this writing, the project is through Milestone 12: there's a complete
+playable loop (tap to start → hold/release to breathe → collide with a
+procedurally-spawned obstacle → die → tap to restart), with score,
+persistence, and audio routing all wired in. `world.tscn` is `main_scene`.
 
-## Known limitations (as of bootstrap)
+## Known limitations (as of Milestone 12)
 
 - Android SDK / export template setup has **not** been done or verified
   on-device. See `docs/android_build.md`. This is expected to be resolved
   on PC (Milestone 16), not on Android.
-- No visual assets exist yet — placeholders only, once gameplay milestones
-  begin. Placeholder assets are designed to be swappable without gameplay
-  code changes.
+- **No visual assets exist yet** — the player, obstacles, and scroll
+  markers are all flat-colored placeholder shapes (`Polygon2D`). Designed
+  to be swappable without gameplay code changes (Milestone 15).
+- **No audio assets exist at all** — every `AudioStreamPlayer` in
+  `scripts/audio/audio_controller.tscn` (Inhale, Collision, GameOver,
+  Music) has no stream assigned. This is a genuine content gap, not just
+  a deferred check: adding real sound effects and one music loop is pure
+  asset work (drop `.ogg`/`.wav` files under `assets/audio/`, assign them
+  to the corresponding `AudioStreamPlayer.stream` property in the editor)
+  — no code changes needed. The routing logic (on/off setting, which
+  sound plays on which event) is already implemented and tested.
 - Godot Editor GUI has not been run at all yet (only the headless CLI, from
   the Android/Termux side). First PC session should confirm the project
   opens cleanly in the actual Editor.
+- **Visual/feel verification backlog**: Milestones 5, 6, 8, 9, and 11 all
+  have logic that's headlessly tested but has never actually been seen or
+  felt running (touch responsiveness, scrolling illusion, obstacle
+  appearance/oscillation, camera smoothing, tap-to-start/restart, HUD
+  readability). This is the single highest-value thing to check first on
+  PC — see `docs/current_status.md`'s "NOT TESTED" sections across those
+  milestones for specifics.
+- A few `GameState`-gated code paths in `scripts/world/world.gd` (e.g.
+  `get_game_state()`, the freeze-while-not-playing check) are only
+  exercised by a real project boot — confirmed via direct probe that `-s`
+  headless script mode cannot resolve autoloads or absolute `/root/...`
+  NodePaths at all, even with a hand-built tree. Opening the project in
+  the Editor and playing it is the first real exercise of these paths.
 
 ## Tasks best done on PC
 

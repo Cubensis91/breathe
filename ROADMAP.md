@@ -402,12 +402,56 @@ remain outstanding
   and UI layout: `[MANUAL-ANDROID]`/`[PC-GODOT]` (not done).
 
 ## Milestone 12 — Audio System
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — routing/settings logic done and tested;
+no real audio assets exist yet, so there is nothing audible to verify
 
 - Objective: Inhale, collision, game-over sounds; one music loop; on/off
   setting.
-- Environment: `[HYBRID]`. Audio routing logic testable headlessly; actual
-  sound/feel requires manual Android test or PC.
+- What landed:
+  - `scripts/audio/audio_settings.gd` (`AudioSettings`): on/off setting
+    via `FileAccess`, same pattern as `HighScorePersistence` (overridable
+    `save_path`, defaults to enabled when no save exists).
+  - `scripts/audio/audio_controller.gd` + `audio_controller.tscn`
+    (`AudioController`, `Node` with 4 `AudioStreamPlayer` children -
+    Inhale, Collision, GameOver, Music): `play_inhale()`/`play_collision()`/
+    `play_game_over()`/`start_music()`/`stop_music()`, all gated by
+    `AudioSettings.is_enabled()` and safely no-op if a stream isn't
+    assigned. **No real audio assets exist in this environment** - every
+    `AudioStreamPlayer` has `stream = null`. Adding real sound/music later
+    is purely an asset change (assign a stream in the scene) - no code
+    here needs to change, matching the project's placeholder-asset
+    principle.
+  - `breathing_controller.gd`: new `inhale_started` signal, emitted
+    exactly on the false -> true hold transition (not every hold call, not
+    on release) - kept as a plain signal with no audio dependency, so
+    BreathingController itself stays decoupled from the AUDIO layer.
+  - `world.gd`: wires `AudioController` in three places -
+    `breathing.inhale_started` connected to `audio.play_inhale` (a
+    structural connection needing no tree/autoload, unlike the
+    `GameState` connection - `_ensure_audio_connected()`, called from
+    `step()`); `play_collision()`/`play_game_over()` called at the same
+    moment `check_obstacles()` reports death; `start_music()` called
+    alongside `reset_session()` when transitioning into `PLAYING`.
+  - `world.tscn`: added `AudioController` as a child of `World`.
+- Acceptance criteria: `AudioSettings` correctly defaults/persists/toggles
+  (`tests/test_audio_settings.gd`, 7/7); `AudioController` has the
+  expected 4 stream-less children and every routing method is safe to
+  call with audio enabled or disabled
+  (`tests/test_audio_controller.gd`, 12/12); `inhale_started` fires
+  exactly on the hold-start transition, not on repeated holds or on
+  release (extended `tests/test_breathing_controller.gd`, 12/12, was 8/8).
+  Project still boots headlessly with `AudioController` present.
+- Acceptance criteria (audible sound): **not applicable yet** - there is
+  no audio content in this environment to hear. This isn't a deferred
+  verification like the visual/feel backlog elsewhere; it's a genuine
+  content gap. `docs/pc_handoff.md` flags that adding real audio
+  files (inhale/collision/game-over SFX, one music loop) is PC work with
+  no code changes required.
+- Dependencies: Milestones 5, 7, 10, 11.
+- Environment: `[HYBRID]`. Routing/settings logic: `[UBUNTU-CLI]`,
+  headlessly tested (done). Actual sound content and feel:
+  `[PC-GODOT]` (assets) then `[MANUAL-ANDROID]` (verification) - not done,
+  blocked on real audio assets existing at all.
 
 ## Milestone 13 — Automated Validation and Testing
 **Status: NOT STARTED**

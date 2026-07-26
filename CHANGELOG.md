@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- Audio system (Milestone 12): `AudioSettings` (on/off, `FileAccess`-backed,
+  same pattern as `HighScorePersistence`) and `AudioController`
+  (`scripts/audio/audio_controller.gd` + `audio_controller.tscn`, 4
+  stream-less `AudioStreamPlayer` children - no real audio assets exist
+  yet, adding them later is an asset-only change). `BreathingController`
+  gained an `inhale_started` signal (fires exactly on hold-start).
+  `world.gd` wires it all together: inhale on hold-start, collision/
+  game-over sounds on death, music start on entering `PLAYING`.
+  `tests/test_audio_settings.gd` (7/7), `tests/test_audio_controller.gd`
+  (12/12), and extended `tests/test_breathing_controller.gd` (12/12, was
+  8/8) cover the routing/settings logic. No audible sound exists to verify
+  yet - a genuine content gap, not a deferred check.
 - Full `GameState` wiring (Milestone 11): `world.gd`'s `step()` freezes
   unless `GameState.is_playing()`; `reset_session()` resets score,
   obstacles, and player position/velocity/breathing state whenever a

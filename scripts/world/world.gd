@@ -35,6 +35,15 @@ class_name World
 ## The signal connection is made lazily on the first step() call rather
 ## than in _ready(), so it doesn't depend on _ready()/tree-entry timing -
 ## the same reasoning that's kept @onready out of this codebase elsewhere.
+##
+## Milestone 12 wires an AudioController (child of World, see
+## audio_controller.tscn) into three trigger points: BreathingController's
+## inhale_started signal (connected lazily, but - unlike GameState - this
+## doesn't need tree membership at all, since AudioController and
+## BreathingController are both just structural children in the same
+## instantiated subtree); collision/game-over sounds at the same moment
+## check_obstacles() reports death; and starting the music loop when
+## transitioning into PLAYING.
 
 const ScrollManagerScript = preload("res://scripts/world/scroll_manager.gd")
 const PlayerScript = preload("res://scripts/player/player.gd")
@@ -46,6 +55,7 @@ const CollisionSystemScript = preload("res://scripts/systems/collision_system.gd
 const ScoreScript = preload("res://scripts/systems/score.gd")
 const HighScorePersistenceScript = preload("res://scripts/systems/high_score.gd")
 const GameStateScript = preload("res://scripts/core/game_state.gd")
+const AudioControllerScript = preload("res://scripts/audio/audio_controller.gd")
 
 var scroll_manager := ScrollManagerScript.new()
 var spawner := ObstacleSpawnerScript.new()
@@ -65,9 +75,13 @@ var despawn_margin_x: float = 300.0
 var player_start_position: Vector2 = Vector2.ZERO
 var _start_position_captured: bool = false
 var _connected_game_state: Object = null
+var _audio_connected: bool = false
 
 func get_player() -> PlayerScript:
 	return get_node_or_null("Player") as PlayerScript
+
+func get_audio_controller() -> AudioControllerScript:
+	return get_node_or_null("AudioController") as AudioControllerScript
 
 ## Direct children that are Obstacle (or MovingObstacle, which extends it)
 ## instances, as {"position": Vector2, "radius": float} - the shape
@@ -114,9 +128,24 @@ func _ensure_game_state_connected() -> void:
 		game_state.state_changed.connect(_on_game_state_changed)
 		_connected_game_state = game_state
 
+func _ensure_audio_connected() -> void:
+	if _audio_connected:
+		return
+	var player := get_player()
+	var audio := get_audio_controller()
+	if not player or not audio:
+		return
+	var breathing = player.get_breathing()
+	if breathing:
+		breathing.inhale_started.connect(audio.play_inhale)
+		_audio_connected = true
+
 func _on_game_state_changed(_previous, current) -> void:
 	if current == GameStateScript.State.PLAYING:
 		reset_session()
+		var audio := get_audio_controller()
+		if audio:
+			audio.start_music()
 
 ## Resets everything a new run needs to start clean: score/distance,
 ## difficulty, spawn timing, obstacles, and the player's position/velocity/
@@ -186,6 +215,7 @@ func _despawn_old_obstacles() -> void:
 func step(delta: float) -> void:
 	_ensure_start_position_captured()
 	_ensure_game_state_connected()
+	_ensure_audio_connected()
 
 	var game_state = get_game_state()
 	if game_state and not game_state.is_playing():
@@ -204,6 +234,10 @@ func step(delta: float) -> void:
 			var died_this_frame: bool = CollisionSystemScript.check_obstacles(player.position, player.radius, gather_obstacles(), game_state)
 			if died_this_frame:
 				high_score.record_score(get_current_score())
+				var audio := get_audio_controller()
+				if audio:
+					audio.play_collision()
+					audio.play_game_over()
 
 func _physics_process(delta: float) -> void:
 	step(delta)
