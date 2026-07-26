@@ -23,8 +23,7 @@ Milestone 6 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`49e25e7` — "feat: add World scene with scrolling and camera-follow (Milestone 6, partial)"
 
 ## COMPLETED
 
