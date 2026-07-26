@@ -11,7 +11,7 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
 ---
 
 ## Milestone 0 — Environment and GitHub Validation
-**Status: IN PROGRESS**
+**Status: COMPLETED**
 
 - Objective: Verify the Termux → Ubuntu (proot-distro) → Git → GitHub →
   Godot CLI pipeline actually works on this device before building anything.
@@ -24,7 +24,7 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
 - Requires PC: No.
 
 ## Milestone 1 — Repository Bootstrap
-**Status: IN PROGRESS**
+**Status: COMPLETED**
 
 - Objective: Create `breathe` GitHub repo and initial directory/doc structure.
 - Acceptance criteria: All top-level docs exist; folder structure exists;
@@ -33,7 +33,7 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
 - Environment: `[UBUNTU-CLI]` `[GITHUB]`.
 
 ## Milestone 2 — Minimal Godot Project
-**Status: NOT STARTED**
+**Status: COMPLETED**
 
 - Objective: Smallest possible valid `project.godot` that boots and can be
   validated headlessly, proving the CLI pipeline before real gameplay work.

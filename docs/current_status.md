@@ -9,7 +9,8 @@ Milestone 1 — Repository Bootstrap
 
 ## STATUS
 
-IN PROGRESS
+Milestone 0 — COMPLETED
+Milestone 1 — COMPLETED
 
 ## BRANCH
 
@@ -17,7 +18,7 @@ IN PROGRESS
 
 ## LATEST STABLE COMMIT
 
-(none yet — first commit pending as part of this session)
+`b66b46c` — "feat: bootstrap BREATHE repo, docs, and validated Godot pipeline"
 
 ## COMPLETED
 
@@ -43,13 +44,21 @@ IN PROGRESS
   `4.7.1.stable.official.a13da4feb`.
 - `gh auth status`, `git --version`, `gh --version`.
 
+- Minimal Godot project created (`scripts/core/bootstrap.gd` +
+  `bootstrap.tscn`, referenced as `run/main_scene`) and verified to boot
+  headlessly: `godot4 --headless --path . --quit` → prints
+  "BREATHE bootstrap: pipeline validation OK", exit code 0.
+- `scripts_dev/validate.sh`, `test.sh`, `build.sh` run successfully.
+  `scripts_dev/export_android.sh` correctly fails with a clear, actionable
+  error (no export templates installed yet) rather than a silent no-op.
+- First commit (`b66b46c`) pushed to `main` on GitHub, verified via
+  `gh repo view` (public, default branch `main`).
+
 ## NOT TESTED
 
 - Godot Editor GUI (not expected to be used on-device; deferred to PC).
-- Minimal Godot project headless run (`--headless --quit`) — Milestone 2,
-  not yet created at time of writing.
 - Android SDK / export template setup — not attempted yet.
-- Any actual gameplay code — none exists yet.
+- Any actual gameplay code — none exists yet (Milestone 3 onward).
 
 ## KNOWN ISSUES
 
@@ -64,9 +73,10 @@ milestones.
 
 ## NEXT ACTION
 
-Create the minimal Godot 4 project (Milestone 2) at the repo root, validate
-it headlessly (`godot4 --headless --path . --quit`), then commit and push
-the full bootstrap (docs + structure + minimal project) as the first commit.
+Begin Milestone 3 (Core Architecture): establish plain GDScript classes for
+game state / player / world / systems / UI / audio per `ARCHITECTURE.md`,
+independent of scenes, so they're headlessly testable ahead of real
+gameplay milestones (4+).
 
 ## NEXT ENVIRONMENT
 
