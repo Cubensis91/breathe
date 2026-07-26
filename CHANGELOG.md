@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `Score` (`scripts/systems/score.gd`): pure `compute(distance_traveled)`
+  converting distance into a display score, one source of truth for the
+  scale factor.
+- `HighScorePersistence` (`scripts/systems/high_score.gd`): local
+  high-score save/load via `FileAccess`, with a `record_score()` rule that
+  saves only strictly-greater scores. `world.gd` records a score exactly
+  once per run, right when `CollisionSystem.check_obstacles()` reports
+  death was triggered that frame. `tests/test_score.gd` (4/4) and
+  `tests/test_high_score.gd` (10/10, using a throwaway per-run save path,
+  cleaned up afterward) cover the new logic.
 - `DifficultyCurve` (`scripts/world/difficulty_curve.gd`): pure linear
   scroll-speed ramp capped at `max_speed`, now driving `ScrollManager`
   (`scroll_speed` is no longer constant - it increases with

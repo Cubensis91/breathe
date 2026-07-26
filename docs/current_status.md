@@ -4,7 +4,7 @@ _Last updated: 2026-07-26_
 
 ## CURRENT MILESTONE
 
-Milestone 9 — Endless Mode and Difficulty
+Milestone 10 — Score and Persistence
 
 ## STATUS
 
@@ -19,6 +19,7 @@ Milestone 6 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 Milestone 7 — COMPLETED (rule) — runtime wiring landed in Milestone 8
 Milestone 8 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
 Milestone 9 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
+Milestone 10 — COMPLETED
 
 ## BRANCH
 
@@ -26,85 +27,81 @@ Milestone 9 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 
 ## LATEST STABLE COMMIT
 
-`ab7e325` — "feat: add procedural obstacle spawning and difficulty ramp (Milestone 9)"
+(pending — this session's commit not yet made at time of writing; see
+`git log` for the actual latest hash)
 
 ## COMPLETED
 
-- Milestones 0-8: see ROADMAP.md and earlier CHANGELOG entries.
-- **Milestone 9 — endless spawning and difficulty:**
-  - `DifficultyCurve` (`scripts/world/difficulty_curve.gd`): pure
-    `compute_scroll_speed(distance_traveled)`, linear ramp from
-    `base_speed` (200) capped at `max_speed` (500).
-  - `ScrollManager` updated: `scroll_speed` is no longer constant -
-    `advance(delta)` recomputes it from the new `distance_traveled` via an
-    owned `DifficultyCurve`, after using the *current* speed to advance
-    distance (same order as `Player.integrate_physics`'s velocity handling).
-  - `ObstacleSpawner` (`scripts/world/obstacle_spawner.gd`): pure
-    `should_spawn(distance_traveled)` / `compute_interval(distance_traveled)`
-    - spawn spacing tightens toward `min_interval` as distance grows.
-    Decoupled from Godot entirely; deciding what/where to spawn is
-    `world.gd`'s job.
-  - `world.gd`: `_spawn_obstacle()` instances a random `Obstacle` or
-    `MovingObstacle` ahead of the player (900px lookahead, randomized Y)
-    each time `spawner.should_spawn()` fires. `_despawn_old_obstacles()`
-    frees anything more than 300px behind the player, keeping the run
-    bounded rather than growing the scene tree forever.
-  - `world.tscn`: removed the 2 hand-placed obstacles from Milestone 8 -
-    spawning is now fully procedural, starting from zero.
+- Milestones 0-9: see ROADMAP.md and earlier CHANGELOG entries.
+- **Milestone 10 — scoring and persistence:**
+  - `Score` (`scripts/systems/score.gd`): pure `compute(distance_traveled)`,
+    a single source of truth for the distance-to-score scale factor
+    (`DISTANCE_PER_POINT = 10.0`).
+  - `HighScorePersistence` (`scripts/systems/high_score.gd`):
+    `load_high_score()`/`save_high_score()` via `FileAccess` at an
+    overridable `save_path` (default `user://high_score.save`, stored as a
+    raw 32-bit int). `record_score(score)` only saves and returns `true`
+    when `score` strictly exceeds the current high score.
+  - `world.gd`: reused `CollisionSystem.check_obstacles()`'s own return
+    value (`true` exactly when death was triggered *this frame*) to call
+    `high_score.record_score(Score.compute(scroll_manager.distance_traveled))`
+    exactly once per run - no separate guard flag needed.
 
 ## TESTED
 
-- `tests/test_difficulty_curve.gd` (5/5): ramp correctness, cap behavior,
-  monotonicity.
-- `tests/test_scroll_manager.gd` (7/7, new): self-consistency between
-  `scroll_speed` and the difficulty curve across many steps, cap respected.
-- `tests/test_obstacle_spawner.gd` (9/9): threshold timing, interval
-  shrink/clamp behavior.
-- `tests/test_world.gd` (15/15, was 12/12): starts with zero obstacles;
-  spawns at least one after enough distance; stays bounded (not unbounded
-  growth) over a long simulated run (65 fast-forwarded seconds); other
-  Milestone 6-8 coverage retained.
-- All previous tests still pass unchanged - 89 total assertions across 10
-  test files.
-- `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass, including the
-  real project-boot check.
+- `tests/test_score.gd` (4/4): scaling, flooring, monotonicity.
+- `tests/test_high_score.gd` (10/10): no save file initially; only
+  strictly-greater scores are recorded; persists correctly across
+  load/save cycles. Uses a throwaway per-run `user://` path
+  (`test_high_score_<ticks>.save`), verified cleaned up afterward - never
+  touches or depends on a real save file.
+- Confirmed via direct inspection of the Godot user data directory
+  (`~/.local/share/godot/app_userdata/BREATHE/`) that the real project-boot
+  smoke check does **not** create a stray `high_score.save` - `GameState`
+  never reaches `PLAYING` there, so `died_this_frame` is always false and
+  `record_score()` is never called during that check.
+- All previous tests still pass unchanged - 103 total assertions across
+  12 test files.
+- `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass.
 
 ## NOT TESTED
 
 - Godot Editor GUI (deferred to PC).
 - Android SDK / export template setup.
-- **Visual/feel of anything in this milestone**: does the difficulty ramp
-  feel fair, do obstacles read clearly as they scroll in/out, does the
-  spawn/despawn cadence look reasonable on screen. Same carried-over debt
-  as Milestones 5, 6, 8 - still requires `[MANUAL-ANDROID]` or `[PC-GODOT]`.
-- Real collision with a *procedurally spawned* obstacle - `GameState` still
-  never reaches `PLAYING` (Milestone 11), so death-on-collision has still
-  only ever been exercised via `tests/test_collision_system.gd`'s isolated
-  instance.
+- **The World-level score-recording wiring itself** - like the Milestone 8
+  collision wiring, this only fires once a real game session actually
+  reaches `PLAYING` then `DEAD`, which requires Milestone 11's GameState/UI
+  flow. Not exercised by any headless test (same accepted limitation as
+  Milestone 8/9's `get_game_state()`-gated code paths).
+- Visual/feel verification carried over from Milestones 5, 6, 8, 9 -
+  still outstanding, still requires `[MANUAL-ANDROID]` or `[PC-GODOT]`.
+  Milestone 10 has no new visual component (no UI yet - that's Milestone
+  11), so it doesn't add to this backlog.
 
 ## KNOWN ISSUES
 
 - RAM is tight on this device (~700 MiB "available" observed during
   discovery). Avoid heavy concurrent processes when running Godot.
-- Visual/feel checks for Milestones 5, 6, 8, and now 9 remain overdue -
-  not a blocker for continued logic-first progress, but this backlog is
-  growing and shouldn't be deferred indefinitely. Worth a dedicated PC/
-  Android session soon.
+- Visual/feel checks for Milestones 5, 6, 8, 9 remain overdue - not a
+  blocker for continued logic-first progress, but this backlog is growing
+  and shouldn't be deferred indefinitely.
 
 ## BLOCKERS
 
-None for continuing code-first development. Android export tooling remains
-an open question (see `docs/android_build.md`).
+None. Android export tooling remains an open question (see
+`docs/android_build.md`).
 
 ## NEXT ACTION
 
-Begin Milestone 10 (Score and Persistence): distance/time-based score
-(likely just `ScrollManager.distance_traveled`, already tracked) and local
-high-score save/load. Also a good moment to consider finally doing the
-overdue visual/feel pass across Milestones 5, 6, 8, 9 before the backlog
-grows further.
+Begin Milestone 11 (UI and Game States): wire `GameState` transitions into
+an actual menu/playing/dead/restart flow, and a minimal UI (score display,
+restart prompt). This is also the milestone that will finally let the
+Milestone 7-10 death/score/persistence wiring actually fire in a real
+session (GameState reaching PLAYING for the first time) - a natural point
+to also do the overdue visual/feel pass across Milestones 5, 6, 8, 9.
 
 ## NEXT ENVIRONMENT
 
-`[UBUNTU-CLI]` (scoring/persistence logic), `[MANUAL-ANDROID]` / `[PC-GODOT]`
-increasingly overdue for Milestones 5, 6, 8, 9 feel verification
+`[HYBRID]` (state machine wiring is `[UBUNTU-CLI]`; UI layout benefits from
+`[PC-GODOT]`); `[MANUAL-ANDROID]`/`[PC-GODOT]` increasingly overdue for
+feel verification

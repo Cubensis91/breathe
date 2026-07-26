@@ -17,6 +17,11 @@ class_name World
 ## distance via scripts/world/difficulty_curve.gd). world.tscn no longer
 ## hand-places any obstacles - the spawner produces them all.
 ##
+## Milestone 10 adds scoring/persistence: when a collision ends the run,
+## the final distance-based score is compared against the saved high
+## score exactly once (using check_obstacles()'s own return value to know
+## death just happened this frame, rather than a separate guard flag).
+##
 ## Not yet gated by GameState for scroll/obstacles-only-while-PLAYING - that
 ## wiring belongs to Milestone 11 (UI and Game States).
 
@@ -27,9 +32,12 @@ const ObstacleScene = preload("res://scripts/world/obstacle.tscn")
 const MovingObstacleScene = preload("res://scripts/world/moving_obstacle.tscn")
 const ObstacleSpawnerScript = preload("res://scripts/world/obstacle_spawner.gd")
 const CollisionSystemScript = preload("res://scripts/systems/collision_system.gd")
+const ScoreScript = preload("res://scripts/systems/score.gd")
+const HighScorePersistenceScript = preload("res://scripts/systems/high_score.gd")
 
 var scroll_manager := ScrollManagerScript.new()
 var spawner := ObstacleSpawnerScript.new()
+var high_score := HighScorePersistenceScript.new()
 
 ## How far ahead of the player (world-space X) a newly spawned obstacle
 ## appears - past the right edge of the 720-wide viewport so it scrolls
@@ -119,7 +127,9 @@ func step(delta: float) -> void:
 
 		var game_state = get_game_state()
 		if game_state:
-			CollisionSystemScript.check_obstacles(player.position, player.radius, gather_obstacles(), game_state)
+			var died_this_frame: bool = CollisionSystemScript.check_obstacles(player.position, player.radius, gather_obstacles(), game_state)
+			if died_this_frame:
+				high_score.record_score(ScoreScript.compute(scroll_manager.distance_traveled))
 
 func _physics_process(delta: float) -> void:
 	step(delta)

@@ -301,10 +301,38 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   curves) - done. Visual feel: `[MANUAL-ANDROID]`/`[PC-GODOT]` (not done).
 
 ## Milestone 10 — Score and Persistence
-**Status: NOT STARTED**
+**Status: COMPLETED**
 
 - Objective: Distance/time-based scoring, local high-score save/load.
-- Environment: `[UBUNTU-CLI]`. Headless testable: Yes.
+- What landed:
+  - `scripts/systems/score.gd` (`Score`, `RefCounted`, static method only):
+    `compute(distance_traveled)` - a single pure function converting raw
+    distance (px, from `ScrollManager`) into a display score
+    (`DISTANCE_PER_POINT = 10.0`), so the scale factor has one source of
+    truth instead of getting duplicated in World/UI code later.
+  - `scripts/systems/high_score.gd` (`HighScorePersistence`): `load_high_score()`/
+    `save_high_score()` via Godot's `FileAccess`, storing a raw 32-bit
+    integer at an overridable `save_path` (default `user://high_score.save`).
+    `record_score(score)` is the orchestration rule: saves and returns
+    `true` only if `score` strictly exceeds the current high score,
+    otherwise leaves the save untouched and returns `false`.
+  - `world.gd`: reused `check_obstacles()`'s own return value (`true`
+    exactly when death was triggered *this frame*) to call
+    `high_score.record_score(Score.compute(scroll_manager.distance_traveled))`
+    exactly once per run, with no extra guard flag needed.
+- Acceptance criteria: `Score.compute()` scales/floors correctly and is
+  monotonic (`tests/test_score.gd`, 4/4); `HighScorePersistence` correctly
+  reports no save file initially, only records strictly-greater scores,
+  and persists across load/save cycles, using a throwaway per-run test
+  path cleaned up afterward so it never touches or depends on a real save
+  (`tests/test_high_score.gd`, 10/10). Confirmed the real project-boot
+  smoke check never creates a stray `user://high_score.save` (GameState
+  never reaches `PLAYING` yet, so `died_this_frame` is always false there).
+- Dependencies: Milestones 3, 7, 9.
+- Environment: `[UBUNTU-CLI]`. Headless testable: Yes - done. The World-level
+  wiring (recording on death) is glue code exercised only once a real game
+  session reaches `PLAYING`/`DEAD` (Milestone 11), same limitation already
+  accepted for the Milestone 8 collision wiring.
 
 ## Milestone 11 — UI and Game States
 **Status: NOT STARTED**
