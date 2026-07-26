@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `BreathingController` (`scripts/player/breathing_controller.gd`): hold →
+  inhale → rise / release → exhale → descend, via a pure
+  `compute_velocity_y()` function (ramped acceleration using `move_toward`,
+  clamped at `max_rise_speed`/`max_fall_speed`) plus thin `_unhandled_input`
+  glue for touch/mouse. Decoupled from `Player` - not yet wired into a
+  scene. `tests/test_breathing_controller.gd` covers the physics math
+  (8/8 assertions pass). Touch feel is **not yet verified** - requires
+  manual Android testing once wired into an actual playable scene.
 - `Player` controller (`scripts/player/player.gd`, `Area2D`) with
   position/velocity state and generic `integrate_physics(delta)`
   integration, decoupled from whatever will drive velocity (breathing

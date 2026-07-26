@@ -85,12 +85,33 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   velocity until Milestone 5; manual Android testing becomes relevant then.
 
 ## Milestone 5 — Breathing Mechanic
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — logic done and tested; touch feel unverified
 
 - Objective: Hold → inhale → rise, release → exhale → descend, as a testable
   input/physics module.
-- Environment: `[UBUNTU-CLI]`. Headless testable: movement math only.
-  Manual Android test required: touch responsiveness and feel.
+- What landed: `scripts/player/breathing_controller.gd` (`BreathingController`,
+  extends `Node`). `set_holding(bool)` is the input-facing entry point;
+  `compute_velocity_y(current_velocity_y, delta)` is a pure physics function
+  (uses `move_toward` to accelerate toward `-max_rise_speed` while holding or
+  `+max_fall_speed` while released, so it ramps rather than snaps). A thin
+  `_unhandled_input()` translates `InputEventScreenTouch`/left-click
+  `InputEventMouseButton` into `set_holding()` calls. Deliberately does not
+  reference `Player` or any scene - wiring it to an actual player in a live
+  scene is a later milestone's job (world/gameplay scene, Milestone 6+).
+- Acceptance criteria (logic): default `is_holding == false`; released
+  state accelerates toward `+max_fall_speed` and clamps without overshoot;
+  holding accelerates toward `-max_rise_speed` and clamps without overshoot;
+  rapid hold/release immediately reverses acceleration direction.
+  `tests/test_breathing_controller.gd`: 8/8 assertions pass.
+- Acceptance criteria (feel): **not yet verified.** Touch responsiveness,
+  whether the ramp (900 px/s² accel, 260 px/s cap on a 1280px-tall viewport)
+  actually feels good, and rapid hold/release responsiveness on a real
+  screen all require `[MANUAL-ANDROID]` testing this milestone doesn't
+  include. The `_unhandled_input` touch/mouse glue itself is also untested
+  beyond compiling - only the pure functions it calls are unit tested.
+- Dependencies: Milestone 4.
+- Environment: `[UBUNTU-CLI]`. Headless testable: movement math only (done).
+  Manual Android test required: touch responsiveness and feel (not done).
 
 ## Milestone 6 — World Movement and Camera
 **Status: NOT STARTED**
