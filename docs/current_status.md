@@ -32,8 +32,7 @@ deferred check)
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`dbe48aa` — "feat: add audio routing and settings system (Milestone 12)"
 
 ## COMPLETED
 
