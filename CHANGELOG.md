@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Changed
+- `docs/pc_handoff.md` refreshed for accuracy (Milestone 14): updated
+  stale Milestone 12 references, corrected the `class_name`/`preload()`
+  explanation pointer to `docs/development_workflow.md`, added real-audio
+  sourcing to PC tasks, and recorded a genuine fresh-clone verification
+  (not just a re-check against the working copy) - `git clone` into a
+  clean directory, `validate.sh`/`test.sh`/`build.sh` all pass identically,
+  executable bits survive, no hardcoded machine-specific paths anywhere in
+  the tracked tree. Opening the actual Godot Editor GUI remains
+  unverifiable from this headless environment - the one genuinely
+  PC-only piece of this milestone.
+
 ### Added
 - Test suite consolidation (Milestone 13): audited existing coverage
   against state transitions/scoring/movement/collision/difficulty/

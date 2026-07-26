@@ -4,7 +4,7 @@ _Last updated: 2026-07-26_
 
 ## CURRENT MILESTONE
 
-Milestone 13 — Automated Validation and Testing
+Milestone 14 — PC Handoff
 
 ## STATUS
 
@@ -25,6 +25,9 @@ possible; full-flow and visual feel unverified)
 Milestone 12 — PARTIALLY COMPLETED (routing/settings logic done and
 tested; no real audio assets exist yet - genuine content gap)
 Milestone 13 — COMPLETED
+Milestone 14 — PARTIALLY COMPLETED (everything verifiable from Termux/
+Ubuntu is done; opening in the actual Godot Editor GUI is inherently
+untestable from here)
 
 ## BRANCH
 
@@ -32,78 +35,76 @@ Milestone 13 — COMPLETED
 
 ## LATEST STABLE COMMIT
 
-`904d959` — "test: consolidate headless test suite (Milestone 13)"
+(pending — this session's commit not yet made at time of writing; see
+`git log` for the actual latest hash)
 
 ## COMPLETED
 
-- Milestones 0-12: see ROADMAP.md and earlier CHANGELOG entries.
-- **Milestone 13 — test suite consolidation:**
-  - Audited the existing 15-file/146-assertion suite against the
-    objective's named areas (state transitions, scoring, movement,
-    collision, difficulty, spawning, persistence, config) - all already
-    covered, since tests were written incrementally throughout every
-    prior milestone rather than deferred to this one.
-  - Found and fixed the one real gap: `tests/test_game_state.gd` never
-    tested `MENU -> DEAD` (the one illegal transition pair not yet
-    covered against `_ALLOWED_TRANSITIONS`). Now 17/17.
-  - `scripts_dev/test.sh` now parses each test file's own summary line
-    and prints a suite-wide total pass/fail count, not just a per-file
-    list. Verified correct on both a fully-passing run and a
-    deliberately-injected failing test (added and removed as a temporary
-    probe to confirm detection/reporting both work).
-  - Documented the testing convention in `docs/development_workflow.md`
-    ("Writing tests"): the `SceneTree`/`_check`/summary-line shape, plus
-    4 hard-won lessons (preload over class_name, the `-s` mode autoload/
-    absolute-path limitation, GDScript lambda-capture-by-value, preferring
-    real invariants over timing-dependent assertions).
+- Milestones 0-13: see ROADMAP.md and earlier CHANGELOG entries.
+- **Milestone 14 — PC handoff verification:**
+  - Genuine fresh `git clone` of `Cubensis91/breathe` into a clean
+    directory (not a re-check of the working copy) - `validate.sh`,
+    `test.sh` (148/148), and `build.sh` all pass identically from the
+    clone; `scripts_dev/*.sh` executable bits survive; `assets/*/.gitkeep`
+    present.
+  - Grepped the whole tracked tree for hardcoded machine-specific absolute
+    paths - none found. Checked for stray `TODO`/`FIXME`/`XXX` markers in
+    `scripts/`/`tests/` - none found.
+  - Refreshed `docs/pc_handoff.md`: Milestone 12 -> 13 references updated,
+    `class_name`/`preload()` explanation now correctly points at
+    `docs/development_workflow.md` (permanent home) instead of
+    `docs/current_status.md` (rolling snapshot that drops old detail),
+    added real-audio-asset sourcing to PC tasks, recorded the fresh-clone
+    verification itself.
+  - Spot-checked `README.md`/`ARCHITECTURE.md` - both evergreen/principle
+    documents, still accurate, no changes needed.
 
 ## TESTED
 
-- `tests/test_game_state.gd` extended (17/17, was 15/15): every
-  `_ALLOWED_TRANSITIONS` pair (legal and illegal) now has a direct test.
-- `scripts_dev/test.sh`'s new aggregation logic tested against both a
-  clean pass (148/0 across 15 files) and an injected failure (149/1
-  across 16 files, correctly detected and reported, probe file removed
-  afterward with the working tree confirmed clean).
-- All previous tests still pass unchanged - 148 total assertions across
-  15 test files (up from 146/15 due to the 2 new `MENU -> DEAD` checks).
-- `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass.
+- Fresh clone: `scripts_dev/validate.sh`, `test.sh` (148 assertions, 15
+  files), `build.sh` - all pass identically to the working copy.
+- `grep` across tracked files for this device's absolute paths
+  (`/root/breathe`, `/root/.local`) - zero matches.
+- `grep` for `TODO`/`FIXME`/`XXX` in `scripts/`/`tests/` - zero matches.
 
 ## NOT TESTED
 
-- Godot Editor GUI (deferred to PC).
+- Godot Editor GUI (deferred to PC) - **this is Milestone 14's own
+  acceptance criteria that cannot be met from this environment.** There is
+  no display server here; only the headless CLI has ever run this
+  project. A PC session opening `project.godot` in the real Editor is the
+  first genuine test of "opens cleanly."
 - Android SDK / export template setup.
 - Everything already flagged as outstanding in Milestones 5, 6, 8, 9, 11,
   12 (visual/feel verification, autoload-gated code paths, real audio
-  content) - this milestone was about consolidating what's headlessly
-  testable, not addressing that backlog.
+  content).
 
 ## KNOWN ISSUES
 
 - RAM is tight on this device (~700 MiB "available" observed during
   discovery). Avoid heavy concurrent processes when running Godot.
 - The visual/feel/audio-content backlog (Milestones 5, 6, 8, 9, 11, 12)
-  is now the dominant open item. Milestone 13 deliberately didn't try to
-  address it (out of scope - it's about test consolidation), but it
-  shouldn't be deferred much further.
+  continues to be the dominant open item, and Milestone 14 confirms it
+  can't be closed from here - it genuinely needs a human on a PC or
+  Android device.
 
 ## BLOCKERS
 
-None. Android export tooling remains an open question (see
-`docs/android_build.md`).
+None for continuing code-first development. Opening the project in the
+actual Godot Editor is `BLOCKED — REQUIRES PC` (not a code issue - this
+environment has no display server).
 
 ## NEXT ACTION
 
-Begin Milestone 14 (PC Handoff): verify `docs/pc_handoff.md` is fully
-accurate (it was refreshed in Milestone 12 but should be re-checked against
-the final Milestone 13 state) and confirm a fresh clone's expected
-experience opening in Godot 4.x Editor. Given how much has accumulated,
-this is also a natural moment to strongly recommend the user actually do a
-PC or Android session next, rather than continuing further code-only
-milestones - Milestone 15 (Visual Integration and Polish) explicitly
-requires PC anyway.
+Milestone 15 (Visual Integration and Polish) explicitly requires PC and
+cannot be started from here. Milestone 16 (Android Build and Release)
+likewise. At this point, the highest-value next action is for the user to
+actually open this project on a PC (or get Android export tooling sorted)
+and go through the accumulated verification backlog - not to continue
+further code-only milestones, since the remaining ROADMAP items are
+either PC-gated or would be building further on unverified feel.
 
 ## NEXT ENVIRONMENT
 
-`[GITHUB]` → `[PC-GODOT]` for Milestone 14 verification; a real PC/Android
-session is the highest-value next step overall
+`[PC-GODOT]` — this is the natural stopping point for code-first,
+Termux/Ubuntu-only progress until a PC/Android session happens

@@ -14,27 +14,42 @@ cd breathe
 Then:
 1. Open the project in Godot 4.x Editor (`project.godot` at repo root).
 2. Verify the project imports without errors. This will be the first time
-   the project is scanned by the actual Editor - see the note in
-   `docs/current_status.md` about `class_name` global resolution; nothing
-   should break, but this is worth watching for on first import.
+   the project is scanned by the actual Editor - see
+   `docs/development_workflow.md`'s "Writing tests" section for why
+   (`class_name` global resolution never having run is why this codebase
+   uses `preload()` everywhere instead). Nothing should break, but this is
+   worth watching for on first import.
 3. Run the project (F5) and confirm it launches into `world.tscn` (the
    current `main_scene` - a Player swimming forward through placeholder
-   scroll markers, controlled by hold/release). See
+   scroll markers and procedurally-spawned obstacles, controlled by
+   hold/release, with a HUD and a full start/play/die/restart loop). See
    `docs/current_status.md` for exactly what's implemented vs. not.
 4. Read `ROADMAP.md` for the milestone plan.
 5. Read `ARCHITECTURE.md` for the code layout/principles.
-6. Read `docs/current_status.md` for exactly what's done vs. not.
-7. Continue with the next milestone.
+6. Read `docs/development_workflow.md` for the day-to-day workflow and the
+   headless testing convention (useful even on PC, where the Editor's
+   "Run" button and the `godot4 -s` test scripts complement each other).
+7. Read `docs/current_status.md` for exactly what's done vs. not.
+8. Continue with the next milestone.
 
 ## Current project state
 
 See `docs/current_status.md` — kept up to date after every session. As of
-this writing, the project is through Milestone 12: there's a complete
+this writing, the project is through Milestone 13: there's a complete
 playable loop (tap to start → hold/release to breathe → collide with a
 procedurally-spawned obstacle → die → tap to restart), with score,
-persistence, and audio routing all wired in. `world.tscn` is `main_scene`.
+persistence, and audio routing all wired in, and a consolidated 15-file/
+148-assertion headless test suite (`scripts_dev/test.sh`). `world.tscn` is
+`main_scene`.
 
-## Known limitations (as of Milestone 12)
+This has been verified from a genuine fresh clone (not just the working
+copy this was developed in): `git clone` into a clean directory, then
+`scripts_dev/validate.sh`/`test.sh`/`build.sh` all pass identically,
+executable bits on `scripts_dev/*.sh` survive the clone correctly, and no
+hardcoded machine-specific absolute paths exist anywhere in the tracked
+files (checked via `grep` for this device's paths).
+
+## Known limitations (as of Milestone 13)
 
 - Android SDK / export template setup has **not** been done or verified
   on-device. See `docs/android_build.md`. This is expected to be resolved
@@ -71,8 +86,15 @@ persistence, and audio routing all wired in. `world.tscn` is `main_scene`.
 
 - Creature/environment art, obstacle visuals, UI layout and animation,
   particles, shaders, lighting, atmosphere — see Milestone 15.
+- Real audio content — inhale/collision/game-over sound effects and one
+  music loop. Purely an asset task: drop files under `assets/audio/` and
+  assign them to the matching `AudioStreamPlayer.stream` in
+  `scripts/audio/audio_controller.tscn` (Inhale/Collision/GameOver/Music).
+  No code changes needed — see Milestone 12.
 - Android export, signing, install, and manual playtest — see Milestone 16.
 - Performance profiling, gameplay feel tuning.
+- The visual/feel verification backlog above — this needs a human actually
+  playing the game, which isn't possible from this headless environment.
 
 ## Tasks that don't need PC
 

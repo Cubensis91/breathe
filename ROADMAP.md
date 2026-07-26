@@ -495,11 +495,44 @@ no real audio assets exist yet, so there is nothing audible to verify
 - Environment: `[UBUNTU-CLI]`.
 
 ## Milestone 14 — PC Handoff
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — everything verifiable from Termux/Ubuntu
+is done; opening in the actual Godot Editor GUI is inherently untestable
+from here
 
 - Objective: Ensure `docs/pc_handoff.md` is accurate and a fresh clone opens
   cleanly in Godot 4.x Editor.
-- Environment: `[GITHUB]` → `[PC-GODOT]`.
+- What landed:
+  - Did a genuine `git clone` of `Cubensis91/breathe` into a clean
+    directory (not just re-running checks against the working copy) and
+    verified from that fresh clone: `scripts_dev/validate.sh`, `test.sh`
+    (148/148 assertions, 15 files), and `build.sh` all pass identically;
+    `scripts_dev/*.sh` executable bits survive the clone correctly;
+    `assets/*/.gitkeep` placeholders are present.
+  - Grepped the whole tracked tree for hardcoded machine-specific absolute
+    paths (this device's `/root/breathe`, `/root/.local`) - none found.
+    Nothing in the repo depends on this specific machine's layout.
+  - Checked for stray `TODO`/`FIXME`/`XXX` markers left in `scripts/` or
+    `tests/` - none found.
+  - Refreshed `docs/pc_handoff.md`: updated stale "Milestone 12"
+    references to Milestone 13, corrected a pointer to the `class_name`/
+    `preload()` explanation (it now lives permanently in
+    `docs/development_workflow.md`'s "Writing tests" section, not the
+    rolling `docs/current_status.md` snapshot that drops old detail each
+    milestone), added real-audio-asset sourcing to "Tasks best done on
+    PC", and recorded the fresh-clone verification itself so a PC session
+    knows this has already been checked.
+  - Spot-checked `README.md` and `ARCHITECTURE.md` for accuracy - both are
+    evergreen/principle-level documents (not milestone snapshots) and
+    remain accurate as written; no changes needed.
+- Acceptance criteria: fresh clone + full headless verification - done and
+  confirmed clean. `docs/pc_handoff.md` accuracy - done. **"Opens cleanly
+  in Godot 4.x Editor" itself cannot be verified from this environment** -
+  there is no display server, and the Godot Editor GUI has never been run,
+  only the headless CLI. This is the one genuinely PC-only piece of this
+  milestone's acceptance criteria.
+- Dependencies: Milestones 1-13.
+- Environment: `[GITHUB]` (done). `[PC-GODOT]` (opening the actual Editor -
+  not done, not possible from here).
 
 ## Milestone 15 — Visual Integration and Polish
 **Status: NOT STARTED — REQUIRES PC**
