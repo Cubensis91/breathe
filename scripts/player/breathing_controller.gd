@@ -14,6 +14,13 @@ class_name BreathingController
 ## hold/release state and produces a velocity number. Wiring this into an
 ## actual Player in a live scene is later milestones' job (world/gameplay
 ## scene). This keeps the physics math testable without a scene tree.
+##
+## Milestone 11: _unhandled_input ignores touch/mouse events unless
+## GameState.is_playing() (looked up the same lazy, tree-dependent way as
+## scripts/world/world.gd's get_game_state() - see that file's comment for
+## why this isn't the bare "GameState" identifier). Under headless tests
+## (bare, un-added instances), this is always null, so existing tests that
+## call set_holding()/compute_velocity_y() directly are unaffected.
 
 ## Acceleration applied while holding, in px/s^2.
 var rise_acceleration: float = 900.0
@@ -40,7 +47,15 @@ func compute_velocity_y(current_velocity_y: float, delta: float) -> float:
 	var acceleration := rise_acceleration if is_holding else fall_acceleration
 	return move_toward(current_velocity_y, target_speed, acceleration * delta)
 
+func get_game_state():
+	if not is_inside_tree():
+		return null
+	return get_node_or_null("/root/GameState")
+
 func _unhandled_input(event: InputEvent) -> void:
+	var game_state = get_game_state()
+	if game_state and not game_state.is_playing():
+		return
 	if event is InputEventScreenTouch:
 		set_holding(event.pressed)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

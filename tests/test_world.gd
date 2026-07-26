@@ -6,6 +6,7 @@ extends SceneTree
 const WorldScene = preload("res://scripts/world/world.tscn")
 const WorldScript = preload("res://scripts/world/world.gd")
 const PlayerScript = preload("res://scripts/player/player.gd")
+const GameStateScript = preload("res://scripts/core/game_state.gd")
 
 var _passed := 0
 var _failed := 0
@@ -75,5 +76,60 @@ func _initialize() -> void:
 
 	world.free()
 
+	# Milestone 11: GameState integration.
+	#
+	# get_game_state()'s get_node_or_null("/root/GameState") fundamentally
+	# cannot resolve under `-s` script mode, even with a hand-built live
+	# tree - confirmed by direct probe: even this SceneTree's own `root`
+	# reports "not in a scene tree" for get_path()/absolute NodePath
+	# resolution here. So get_game_state(), and anything gated purely on
+	# it (the freeze-while-not-playing check, and the tap-detection
+	# branch's `if not game_state` guard), are only exercised for real once
+	# a genuine project boot provides the actual autoload - manual/PC
+	# testing territory, same accepted limit as the Milestone 8-10
+	# GameState-gated code paths.
+	#
+	# What *is* testable headlessly: reset_session() and
+	# _on_game_state_changed() take no GameState/tree dependency at all -
+	# they're plain method calls - and is_tap_event() is a pure function.
+	var world2 := WorldScene.instantiate() as WorldScript
+	var player2 := world2.get_player()
+	var start_position2: Vector2 = player2.position
+
+	# Make some session progress to have something to reset.
+	for i in range(5):
+		world2.step(1.0)
+		player2.integrate_physics(1.0)
+	_check(world2.scroll_manager.distance_traveled > 0.0, "session has made some progress before resetting")
+	_check(player2.position.x > start_position2.x, "player has moved before resetting")
+
+	world2._on_game_state_changed(GameStateScript.State.PLAYING, GameStateScript.State.DEAD)
+	_check(world2.scroll_manager.distance_traveled > 0.0, "transitioning to a non-PLAYING state does not reset the session")
+
+	world2._on_game_state_changed(GameStateScript.State.MENU, GameStateScript.State.PLAYING)
+	_check(world2.scroll_manager.distance_traveled == 0.0, "transitioning to PLAYING resets distance_traveled to 0")
+	_check(player2.position == start_position2, "transitioning to PLAYING resets the player's position")
+	_check(player2.velocity == Vector2.ZERO, "transitioning to PLAYING resets the player's velocity")
+	_check(world2.gather_obstacles().size() == 0, "transitioning to PLAYING clears any obstacles that had spawned")
+
+	world2.free()
+
+	_check(WorldScript.is_tap_event(_make_touch(true)) == true, "a pressed screen touch is a tap")
+	_check(WorldScript.is_tap_event(_make_touch(false)) == false, "a released screen touch is not a tap")
+	_check(WorldScript.is_tap_event(_make_mouse_click(MOUSE_BUTTON_LEFT, true)) == true, "a left mouse press is a tap")
+	_check(WorldScript.is_tap_event(_make_mouse_click(MOUSE_BUTTON_LEFT, false)) == false, "a left mouse release is not a tap")
+	_check(WorldScript.is_tap_event(_make_mouse_click(MOUSE_BUTTON_RIGHT, true)) == false, "a right mouse press is not a tap")
+
 	print("test_world: %d passed, %d failed" % [_passed, _failed])
 	quit(1 if _failed > 0 else 0)
+
+func _make_touch(pressed: bool) -> InputEventScreenTouch:
+	var e := InputEventScreenTouch.new()
+	e.pressed = pressed
+	return e
+
+func _make_mouse_click(button_index: int, pressed: bool) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = button_index
+	e.pressed = pressed
+	return e

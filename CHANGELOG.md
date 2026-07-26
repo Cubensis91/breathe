@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- Full `GameState` wiring (Milestone 11): `world.gd`'s `step()` freezes
+  unless `GameState.is_playing()`; `reset_session()` resets score,
+  obstacles, and player position/velocity/breathing state whenever a
+  transition into `PLAYING` happens (connected lazily on first `step()`,
+  not `_ready()`); tapping while not playing starts or restarts a run via
+  the already-legal `MENU`/`DEAD` -> `PLAYING` transitions
+  (`is_tap_event()` extracted as a pure, testable function).
+  `breathing_controller.gd` now ignores input unless playing.
+- `Hud` (`scripts/ui/hud.gd`, `hud.tscn`, `CanvasLayer`): minimal UI - a
+  menu prompt, live score while playing, or a death summary + restart
+  prompt, via a pure `compute_display_text()`. Added as a child of `World`.
+- Extended `tests/test_world.gd` (27/27, was 15/15) and new
+  `tests/test_hud.gd` (8/8). Discovered and documented a hard limitation:
+  `-s` script mode's own `SceneTree.root` can't resolve absolute
+  (`/root/...`) NodePaths, so the autoload-gated code paths (freeze
+  check, tap-to-start) can only be exercised by a real project boot -
+  confirmed by direct probe, not just assumed. `reset_session()` and
+  `_on_game_state_changed()` don't have that dependency and are tested
+  directly. Full-flow and UI visual/feel verification remain outstanding.
 - `Score` (`scripts/systems/score.gd`): pure `compute(distance_traveled)`
   converting distance into a display score, one source of truth for the
   scale factor.

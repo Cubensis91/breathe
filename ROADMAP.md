@@ -335,11 +335,71 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   accepted for the Milestone 8 collision wiring.
 
 ## Milestone 11 — UI and Game States
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — logic done and tested where headlessly
+possible; the autoload-gated code paths and all visual/feel verification
+remain outstanding
 
 - Objective: Menu / playing / dead / restart states, minimal UI.
-- Environment: `[HYBRID]`. State machine logic headless-testable; UI layout
-  benefits from `[PC-GODOT]`.
+- What landed:
+  - `world.gd`: `step()` is now a no-op unless `GameState.is_playing()` -
+    the world freezes during MENU/DEAD instead of continuing to scroll/
+    spawn/collide. Under `-s` tests `get_game_state()` is always null, so
+    this check never triggers there and all prior test behavior is
+    unaffected (verified - no test changes needed for this part).
+  - `world.gd`: `reset_session()` - rebuilds `scroll_manager`/`spawner`
+    from scratch, restores the player to `player_start_position` with zero
+    velocity and `is_holding = false`, and clears all obstacle children.
+    Reached via `_on_game_state_changed(previous, current)`, connected to
+    `GameState.state_changed` lazily on the *first* `step()` call (not
+    `_ready()`, avoiding tree-entry timing dependence entirely) so a
+    transition into `PLAYING` - whether the first start from `MENU` or a
+    restart from `DEAD` - always resets the session exactly once.
+  - `world.gd`: `is_tap_event(event)` (pure static) + `_unhandled_input()` -
+    tapping while not playing calls `game_state.transition_to(PLAYING)`,
+    covering both "start" and "restart" with one gesture (both are already
+    legal transitions in `game_state.gd`).
+  - `breathing_controller.gd`: `_unhandled_input` now ignores touch/mouse
+    events unless `GameState.is_playing()`, using the same lazy
+    `get_node_or_null("/root/GameState")` lookup pattern as `world.gd`.
+  - `scripts/ui/hud.gd` + `hud.tscn` (`Hud`, `CanvasLayer`): a single
+    `Label` showing state-appropriate text. `compute_display_text(state,
+    score, high_score)` is a pure static function (menu prompt / live
+    score / death summary + restart prompt); the rest is presentation
+    glue reading `World.get_current_score()`/`get_high_score()`. Added as
+    a child of `World` in `world.tscn`.
+- **Key discovery**: attempted to test the full autoload-gated flow
+  end-to-end by manually building a live tree (`SceneTree.root` + a
+  hand-named `"GameState"` node) inside a `-s` test, the same technique
+  that worked for scene structure elsewhere. It doesn't work here - a
+  direct probe confirmed that even `-s` mode's own `SceneTree.root`
+  reports "not in a scene tree" for absolute-path (`/root/...`)
+  resolution. So `get_game_state()`, and anything gated purely on it (the
+  freeze check, the tap handler's early-out), are **only exercised by a
+  real project boot** - manual/PC testing territory. This is the same
+  limitation already accepted for the Milestone 8-10 `GameState`-gated
+  code paths, now confirmed to be a hard constraint of `-s` script mode
+  rather than something a cleverer test could work around.
+  `reset_session()` and `_on_game_state_changed()` themselves take no
+  tree/GameState dependency at all, so those *are* tested directly.
+- Acceptance criteria: `reset_session()`/`_on_game_state_changed()`
+  correctly reset (and don't incorrectly reset) session state, verified by
+  direct calls with synthetic before/after state values;`is_tap_event()`
+  correctly classifies touch/mouse events; `Hud.compute_display_text()`
+  correct for all 3 states; `hud.tscn` has the expected node structure.
+  Extended `tests/test_world.gd` (27/27, was 15/15), new
+  `tests/test_hud.gd` (8/8). Project still boots headlessly with the HUD
+  present, no errors.
+- Acceptance criteria (visual/feel + full flow): **not yet verified** -
+  same carried-over debt as Milestones 5, 6, 8, 9, plus this milestone's
+  own untested territory: does tapping to start/restart actually work on a
+  real touchscreen, does the HUD text read clearly, does the freeze-on-
+  death feel right. This is now the natural point to finally do that
+  overdue manual/PC pass, since a full session (start -> play -> die ->
+  restart) exists to test for the first time.
+- Dependencies: Milestones 3, 4, 5, 6, 7, 9, 10.
+- Environment: `[HYBRID]`. State machine logic: `[UBUNTU-CLI]`, headlessly
+  tested where the autoload boundary doesn't block it (done). Full-flow
+  and UI layout: `[MANUAL-ANDROID]`/`[PC-GODOT]` (not done).
 
 ## Milestone 12 — Audio System
 **Status: NOT STARTED**
