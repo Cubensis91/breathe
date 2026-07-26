@@ -4,18 +4,19 @@ _Last updated: 2026-07-26_
 
 ## CURRENT MILESTONE
 
-Milestone 6 — World Movement and Camera
+Milestone 7 — Collision System
 
 ## STATUS
 
 Milestone 0 — COMPLETED
 Milestone 1 — COMPLETED
 Milestone 2 — COMPLETED (superseded: `bootstrap.tscn` deleted, `world.tscn`
-is now `main_scene` and does the same "boots headlessly" job, plus more)
+is now `main_scene`)
 Milestone 3 — COMPLETED (state layer only — see ROADMAP.md note)
 Milestone 4 — COMPLETED
 Milestone 5 — PARTIALLY COMPLETED (logic done and tested; touch feel unverified)
 Milestone 6 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
+Milestone 7 — COMPLETED (rule) — runtime wiring deferred to Milestone 8
 
 ## BRANCH
 
@@ -23,100 +24,72 @@ Milestone 6 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 
 ## LATEST STABLE COMMIT
 
-`49e25e7` — "feat: add World scene with scrolling and camera-follow (Milestone 6, partial)"
+(pending — this session's commit not yet made at time of writing; see
+`git log` for the actual latest hash)
 
 ## COMPLETED
 
-- Milestones 0-5: see ROADMAP.md and earlier CHANGELOG entries.
-- **Milestone 6 — first real gameplay scene:**
-  - `ScrollManager` (`scripts/world/scroll_manager.gd`): constant
-    `scroll_speed` + accumulating `distance_traveled` via `advance(delta)`.
-  - `World` (`scripts/world/world.gd` + `world.tscn`): instances `Player`,
-    owns a `ScrollManager`, and on each `step(delta)` sets
-    `player.velocity.x = scroll_manager.scroll_speed` - constant forward
-    motion driving the endless-world illusion. Includes 4 static
-    `Polygon2D` markers at fixed world-space X positions as a placeholder
-    visual reference for scrolling (swappable later, no gameplay code
-    depends on them).
-  - **Camera-follow needed zero new code**: `Camera2D` is now a child of
-    `Player` in `player.tscn`, with `position_smoothing_enabled = true`.
-    Normal Godot parent/child transform inheritance does the "follow" job.
-  - `player.gd` updated: `integrate_physics()` looks up a sibling
-    `BreathingController` child via `get_node_or_null()` (lazy, not
-    `@onready`-cached) and uses it to drive `velocity.y` when present.
-    Verified this doesn't change behavior for a bare `Player` with no
-    children (existing isolated tests still pass unmodified in outcome).
-  - `project.godot`: `run/main_scene` now points at
-    `res://scripts/world/world.tscn`. Deleted
-    `scripts/core/bootstrap.gd`/`.tscn` (Milestone 2's pipeline-validation
-    stub) since booting the real gameplay scene headlessly is a strictly
-    stronger version of the same check.
-  - Cross-file GDScript typing gotcha discovered and fixed: `class_name`
-    declarations only become globally resolvable after a project scan
-    (normally done by the Editor), which has never happened here since
-    this project has only ever been touched via CLI. Fixed by using
-    explicit `preload()` consts for cross-file type references (e.g.
-    `const PlayerScript = preload("res://scripts/player/player.gd")`)
-    instead of relying on bare `Player`/`BreathingController`/`ScrollManager`
-    type names resolving globally. `class_name` declarations are kept (they
-    work fine once a PC/Editor session eventually scans the project) but
-    nothing here depends on that having happened.
+- Milestones 0-6: see ROADMAP.md and earlier CHANGELOG entries.
+- **Milestone 7 — collision rule:**
+  - `CollisionSystem` (`scripts/systems/collision_system.gd`, `RefCounted`,
+    static methods): `circles_overlap(pos_a, radius_a, pos_b, radius_b)`
+    is pure circle-circle overlap geometry. `check_obstacles(player_position,
+    player_radius, obstacles, game_state)` checks a list of obstacles
+    (plain `Dictionary`s with `"position"`/`"radius"`) against the player
+    and triggers `game_state.transition_to(game_state.State.DEAD)` if
+    anything overlaps while `is_playing()`. Returns whether it triggered.
+  - `game_state` is an explicit parameter, not the `GameState` autoload -
+    matches the isolated-instance testing pattern already used for
+    `GameState` itself, and keeps this system testable without any
+    project-wide state.
+  - Deliberately **not wired** into `Player`/`World`'s actual physics loop
+    yet: there are no real obstacle nodes to check against (Milestone 8).
+    Obstacles are plain Dictionaries here specifically so this milestone
+    doesn't have to guess at Milestone 8's actual node/scene design.
 
 ## TESTED
 
-- `tests/test_world.gd` (6/6): scene instantiation, `World` finding its
-  `Player` child, `player.velocity.x`/`position.x` and
-  `scroll_manager.distance_traveled` tracking correctly across multiple
-  manually-driven physics steps.
-- `tests/test_player.gd` (9/9, was 6/6): added coverage for the scene
-  instance finding its `BreathingController` child and holding driving it
-  upward, plus confirming a bare `Player` has no `BreathingController`.
-- All previous tests (`test_game_state.gd` 15/15, `test_breathing_controller.gd`
-  8/8) still pass unchanged.
-- `scripts_dev/validate.sh`, `test.sh` (4 test files, 38 total assertions),
-  `build.sh` all pass with `world.tscn` as the booted main scene.
+- `tests/test_collision_system.gd` (8/8): overlapping/non-overlapping/
+  exactly-touching circle geometry; death triggers only on overlap while
+  playing; no-op once no longer playing (doesn't re-trigger or error after
+  death).
+- All previous tests still pass unchanged (`test_game_state.gd` 15/15,
+  `test_player.gd` 9/9, `test_breathing_controller.gd` 8/8, `test_world.gd`
+  6/6) - 46 total assertions across 5 test files.
+- `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass.
 
 ## NOT TESTED
 
 - Godot Editor GUI (deferred to PC).
 - Android SDK / export template setup.
-- **Visual/feel verification of anything in this milestone**: does the
-  scrolling illusion actually read as scrolling, does the camera-follow
-  smoothing feel right, is touch responsiveness (Milestone 5) good now
-  that it's wired into a real scene. All require `[MANUAL-ANDROID]` or
-  `[PC-GODOT]`.
-- Current tuning (200 px/s scroll speed, 900 px/s² breathing acceleration,
-  260 px/s max rise/fall) is all placeholder - expected to need adjustment
-  once actually playable.
+- Real obstacle-vs-player collision at runtime (no obstacle nodes exist
+  yet - Milestone 8).
+- Visual/feel verification carried over from Milestones 5-6 (scrolling
+  illusion, camera smoothing, touch responsiveness) - still outstanding,
+  still requires `[MANUAL-ANDROID]` or `[PC-GODOT]`.
 
 ## KNOWN ISSUES
 
 - RAM is tight on this device (~700 MiB "available" observed during
   discovery). Avoid heavy concurrent processes when running Godot.
-- Node processing order (World's `_physics_process` setting
-  `player.velocity.x` vs. Player's `_physics_process` consuming it in the
-  same frame) relies on Godot's default parent-before-child processing
-  order. Not explicitly enforced with `process_priority` - if it were ever
-  reversed, the practical effect is a harmless one-frame lag, not a
-  correctness bug, so this wasn't treated as blocking.
+- Visual/feel checks for Milestones 5 and 6 remain overdue - not a
+  blocker for continued logic-first progress, but shouldn't be deferred
+  indefinitely.
 
 ## BLOCKERS
 
 None for continuing code-first development. Android export tooling remains
-an open question (see `docs/android_build.md`). Manual Android/PC testing
-of visual feel (Milestones 5 & 6) is now unblocked in principle (there's a
-real scene to look at) but hasn't happened yet - it's the natural next
-checkpoint once code-first progress reaches a good pausing point.
+an open question (see `docs/android_build.md`).
 
 ## NEXT ACTION
 
-Begin Milestone 7 (Collision System): overlap detection between `Player`
-and obstacles, triggering a death transition via `GameState`. Also a good
-moment to actually open `world.tscn` on a PC (or run the APK on Android,
-once export tooling is sorted) to manually verify Milestones 5-6 feel
-reasonable before building more on top.
+Begin Milestone 8 (Static and Moving Obstacles): create real obstacle
+scenes (one static, one moving type), and this is the point to actually
+wire `CollisionSystem.check_obstacles()` into `World`'s physics loop against
+real obstacle instances - reading their actual position/radius each frame
+instead of the Dictionary stand-ins used for Milestone 7's tests.
 
 ## NEXT ENVIRONMENT
 
-`[UBUNTU-CLI]` (collision logic), `[MANUAL-ANDROID]` / `[PC-GODOT]`
-(overdue visual/feel check)
+`[UBUNTU-CLI]` (obstacle logic + wiring), `[MANUAL-ANDROID]` / `[PC-GODOT]`
+still owed for Milestones 5-6 feel verification

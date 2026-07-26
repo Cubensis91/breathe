@@ -161,10 +161,40 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   tested (done). Visual feel: `[MANUAL-ANDROID]` / `[PC-GODOT]` (not done).
 
 ## Milestone 7 — Collision System
-**Status: NOT STARTED**
+**Status: COMPLETED (rule) — runtime wiring deferred to Milestone 8**
 
 - Objective: Collision detection between player and obstacles, death trigger.
-- Environment: `[UBUNTU-CLI]`. Headless testable: Yes (geometry/logic).
+- What landed: `scripts/systems/collision_system.gd` (`CollisionSystem`,
+  `RefCounted`, static methods only):
+  - `circles_overlap(pos_a, radius_a, pos_b, radius_b)` - pure circle-circle
+    overlap geometry (touching counts as overlapping).
+  - `check_obstacles(player_position, player_radius, obstacles, game_state)`
+    - checks a list of obstacles (each a `Dictionary` with `"position"` and
+    `"radius"`) against the player, and calls
+    `game_state.transition_to(game_state.State.DEAD)` if any overlap while
+    `game_state.is_playing()`. Returns whether it triggered death.
+  - `game_state` is passed in explicitly rather than reaching for the
+    `GameState` autoload directly, matching the pattern established by
+    `tests/test_game_state.gd` (isolated instances for testing, not global
+    state) and keeping this fully unit-testable.
+  - Obstacles are represented as plain `Dictionary`s rather than a formal
+    `Obstacle` class/scene, because **there are no real obstacle nodes
+    yet** (Milestone 8). Wiring this into `Player`/`World`'s actual physics
+    loop - reading real `CollisionShape2D` radii, iterating real obstacle
+    instances each frame, calling this with live data - is explicitly
+    Milestone 8's job, once there's something real to check against.
+    Building that wiring now against a placeholder obstacle shape would be
+    guesswork about Milestone 8's design.
+- Acceptance criteria: overlapping/non-overlapping/exactly-touching circle
+  geometry all correct; `check_obstacles` triggers `DEAD` only when playing
+  and only when something actually overlaps; it's a no-op once no longer
+  `PLAYING` (won't re-trigger or throw after death). `tests/test_collision_system.gd`:
+  8/8 assertions pass, no live scene tree or physics frames needed.
+- Dependencies: Milestones 3, 4.
+- Environment: `[UBUNTU-CLI]`. Headless testable: Yes (geometry/logic) -
+  done. Runtime/physics-engine integration and manual verification that
+  collisions actually feel/read correctly: Milestone 8 + later
+  `[MANUAL-ANDROID]`/`[PC-GODOT]`.
 
 ## Milestone 8 — Static and Moving Obstacles
 **Status: NOT STARTED**

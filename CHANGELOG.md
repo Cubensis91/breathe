@@ -5,6 +5,15 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `CollisionSystem` (`scripts/systems/collision_system.gd`): pure
+  `circles_overlap()` geometry plus `check_obstacles()`, which triggers a
+  `game_state.transition_to(DEAD)` when an obstacle overlaps the player
+  while playing. Obstacles are plain `Dictionary`s (`position`, `radius`)
+  since Milestone 8 hasn't created real obstacle nodes yet - wiring this
+  into the actual `Player`/`World` physics loop is that milestone's job.
+  `tests/test_collision_system.gd` covers geometry and death-trigger
+  orchestration end to end (8/8 assertions) without needing a live scene
+  tree or physics frames.
 - `ScrollManager` (`scripts/world/scroll_manager.gd`): constant forward
   scroll speed + accumulating distance traveled, feeding the endless-world
   illusion (and later difficulty/scoring milestones).
