@@ -64,12 +64,25 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   unit-testable logic, not rendering). PC required: No.
 
 ## Milestone 4 — Player Controller
-**Status: NOT STARTED**
+**Status: COMPLETED**
 
 - Objective: Player node with position/velocity state, no visuals required
   yet (placeholder shape).
-- Environment: `[UBUNTU-CLI]` / `[HYBRID]`. Manual Android test: partial
-  (feel). PC required: No for logic, yes eventually for visuals.
+- What landed: `scripts/player/player.gd` (`Player`, extends `Area2D`) with
+  `velocity: Vector2` and `integrate_physics(delta)` (`position += velocity *
+  delta`). Deliberately does not decide what drives velocity - that's
+  Milestone 5 (breathing input). `scripts/player/player.tscn` wires it up
+  with a `CollisionShape2D` (circle, for Milestone 7 collision) and a
+  `Polygon2D` placeholder visual (a flat-colored square, swappable later
+  without touching gameplay code).
+- Acceptance criteria: `player.tscn` instantiates cleanly; default state is
+  zero position/velocity; `integrate_physics()` correctly accumulates
+  position across multiple calls with different velocities and deltas.
+  `tests/test_player.gd`: 6/6 assertions pass.
+- Dependencies: Milestone 3.
+- Environment: `[UBUNTU-CLI]` for logic (done, headlessly tested).
+  `[HYBRID]` for feel - not applicable yet since there's no input driving
+  velocity until Milestone 5; manual Android testing becomes relevant then.
 
 ## Milestone 5 — Breathing Mechanic
 **Status: NOT STARTED**

@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `Player` controller (`scripts/player/player.gd`, `Area2D`) with
+  position/velocity state and generic `integrate_physics(delta)`
+  integration, decoupled from whatever will drive velocity (breathing
+  input, Milestone 5). `scripts/player/player.tscn` adds a circle
+  `CollisionShape2D` and a placeholder `Polygon2D` visual.
+  `tests/test_player.gd` covers scene instantiation and integration math
+  (6/6 assertions pass).
 - `GameState` core singleton (`scripts/core/game_state.gd`, autoloaded):
   MENU/PLAYING/DEAD state machine with an explicit legal-transition table
   and a `state_changed` signal.
