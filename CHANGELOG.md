@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `DifficultyCurve` (`scripts/world/difficulty_curve.gd`): pure linear
+  scroll-speed ramp capped at `max_speed`, now driving `ScrollManager`
+  (`scroll_speed` is no longer constant - it increases with
+  `distance_traveled`).
+- `ObstacleSpawner` (`scripts/world/obstacle_spawner.gd`): pure spawn-timing
+  rule (`should_spawn`/`compute_interval`) with spacing that tightens as
+  distance grows. `world.gd` uses it to procedurally spawn random
+  `Obstacle`/`MovingObstacle` instances ahead of the player and despawn
+  ones that fall behind, replacing Milestone 8's 2 hand-placed obstacles
+  entirely - `world.tscn` now starts with none.
+  `tests/test_difficulty_curve.gd` (5/5), `tests/test_obstacle_spawner.gd`
+  (9/9), `tests/test_scroll_manager.gd` (7/7, new dedicated coverage), and
+  an extended `tests/test_world.gd` (15/15, was 12/12) cover the new logic
+  and its bounded-growth behavior over a long simulated run. Visual/feel
+  of spawning, scrolling, and the difficulty ramp is **not yet verified**.
 - `Obstacle` (`scripts/world/obstacle.gd`, the static obstacle type) and
   `MovingObstacle` (`scripts/world/moving_obstacle.gd`, vertical sine
   oscillation around an explicit `origin_y`), with placeholder

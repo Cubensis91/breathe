@@ -6,7 +6,6 @@ extends SceneTree
 const WorldScene = preload("res://scripts/world/world.tscn")
 const WorldScript = preload("res://scripts/world/world.gd")
 const PlayerScript = preload("res://scripts/player/player.gd")
-const ObstacleScript = preload("res://scripts/world/obstacle.gd")
 
 var _passed := 0
 var _failed := 0
@@ -31,6 +30,8 @@ func _initialize() -> void:
 
 	var start_x: float = player.position.x
 
+	_check(world.gather_obstacles().size() == 0, "world.tscn starts with no obstacles - spawning is fully procedural (Milestone 9)")
+
 	# Manually drive several physics steps - no live engine loop needed,
 	# consistent with how test_player.gd exercises integrate_physics directly.
 	var delta := 0.1
@@ -40,28 +41,32 @@ func _initialize() -> void:
 		player.integrate_physics(delta)
 
 	_check(_approx(player.velocity.x, world.scroll_manager.scroll_speed), "player.velocity.x tracks world scroll speed after stepping")
+	_check(world.scroll_manager.distance_traveled > 0.0, "scroll_manager has accumulated some distance")
+	_check(player.position.x > start_x, "player.position.x has advanced with world scroll")
+	_check(
+		_approx(world.scroll_manager.scroll_speed, world.scroll_manager.difficulty.compute_scroll_speed(world.scroll_manager.distance_traveled)),
+		"scroll_speed stays consistent with the difficulty curve (Milestone 9) after stepping"
+	)
 
-	var expected_distance: float = world.scroll_manager.scroll_speed * (delta * steps)
-	_check(_approx(world.scroll_manager.distance_traveled, expected_distance), "scroll_manager accumulates distance correctly")
-	_check(_approx(player.position.x, start_x + expected_distance), "player.position.x advances with world scroll")
+	# Milestone 9: fast-forward with larger steps to comfortably cross the
+	# first spawn threshold (~400px of distance) without an excessive
+	# number of iterations.
+	for i in range(5):
+		world.step(1.0)
+		player.integrate_physics(1.0)
+	var obstacles_after_spawn := world.gather_obstacles()
+	_check(obstacles_after_spawn.size() > 0, "at least one obstacle has spawned after enough distance has been traveled")
+	for o in obstacles_after_spawn:
+		_check(o.has("position") and o.has("radius"), "each spawned obstacle has position and radius keys")
 
-	# Milestone 8: World collects its Obstacle/MovingObstacle children.
-	var obstacles := world.gather_obstacles()
-	_check(obstacles.size() == 2, "world.tscn has 2 obstacle children (Obstacle1, MovingObstacle1)")
-
-	var found_static := false
-	var found_moving := false
-	for o in obstacles:
-		_check(o.has("position") and o.has("radius"), "each gathered obstacle has position and radius keys")
-		if _approx(o.position.x, 700.0) and _approx(o.position.y, 550.0):
-			found_static = true
-		if _approx(o.position.x, 1100.0) and _approx(o.position.y, 640.0):
-			found_moving = true
-	_check(found_static, "gathered obstacles include Obstacle1 at its scene position (700, 550)")
-	_check(found_moving, "gathered obstacles include MovingObstacle1 at its initial position (1100, 640)")
-	# obstacles.size() == 2 (checked above) already confirms Player and the
-	# 4 Marker Polygon2Ds are correctly excluded (world.tscn has 7 children
-	# total: Player, 4 Markers, Obstacle1, MovingObstacle1).
+	# Keep going long enough that early obstacles fall far behind the player
+	# and get despawned, while new ones keep spawning - child count should
+	# stay bounded rather than growing without limit over a long run.
+	for i in range(60):
+		world.step(1.0)
+		player.integrate_physics(1.0)
+	_check(world.get_children().size() < 30, "obstacle count stays bounded over a long run (despawn is working, not just spawn)")
+	_check(world.gather_obstacles().size() > 0, "obstacles still exist near the player after a long run")
 
 	# get_game_state() returns null outside a live project boot (no autoload
 	# context under -s script mode) - step() must degrade gracefully, not crash.

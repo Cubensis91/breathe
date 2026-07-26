@@ -1,9 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scripts/player/player.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scripts/world/obstacle.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scripts/world/moving_obstacle.tscn" id="4"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1")
@@ -30,12 +28,3 @@ color = Color(1, 1, 1, 0.15)
 position = Vector2(1700, 640)
 polygon = PackedVector2Array(-8, -200, 8, -200, 8, 200, -8, 200)
 color = Color(1, 1, 1, 0.15)
-
-[node name="Obstacle1" parent="." instance=ExtResource("3")]
-position = Vector2(700, 550)
-
-[node name="MovingObstacle1" parent="." instance=ExtResource("4")]
-position = Vector2(1100, 640)
-origin_y = 640.0
-amplitude = 150.0
-period = 3.0

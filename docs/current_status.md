@@ -4,7 +4,7 @@ _Last updated: 2026-07-26_
 
 ## CURRENT MILESTONE
 
-Milestone 8 — Static and Moving Obstacles
+Milestone 9 — Endless Mode and Difficulty
 
 ## STATUS
 
@@ -18,6 +18,7 @@ Milestone 5 — PARTIALLY COMPLETED (logic done and tested; touch feel unverifie
 Milestone 6 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
 Milestone 7 — COMPLETED (rule) — runtime wiring landed in Milestone 8
 Milestone 8 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
+Milestone 9 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel unverified)
 
 ## BRANCH
 
@@ -25,82 +26,71 @@ Milestone 8 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 
 ## LATEST STABLE COMMIT
 
-`625f185` — "feat: add static and moving obstacles, wire into collision rule (Milestone 8)"
+(pending — this session's commit not yet made at time of writing; see
+`git log` for the actual latest hash)
 
 ## COMPLETED
 
-- Milestones 0-7: see ROADMAP.md and earlier CHANGELOG entries.
-- **Milestone 8 — real obstacles, wired into the collision rule:**
-  - `Obstacle` (`scripts/world/obstacle.gd` + `obstacle.tscn`): the static
-    type. Just `radius` (exported, default 24.0) and a scene position - no
-    movement script, no `Area2D`/`CollisionShape2D` (Milestone 7 already
-    decided collision is pure geometry, not physics-engine overlap).
-  - `MovingObstacle` (`scripts/world/moving_obstacle.gd` +
-    `moving_obstacle.tscn`, extends `obstacle.gd` via file-path `extends`):
-    the moving type. Vertical sine oscillation around an explicit
-    `origin_y`, via pure `compute_offset_y(elapsed_time)` and
-    `advance(delta)`. `origin_y`/`amplitude`/`period` are all exported.
-  - `player.gd`: added exported `radius = 16.0` (matches its
-    `CollisionShape2D`), so `Player` exposes the same position+radius
-    contract `Obstacle` does.
-  - `world.gd`: `gather_obstacles()` collects direct children that are
-    `Obstacle` instances into `{"position", "radius"}` dictionaries.
-    `get_game_state()` looks up the real `GameState` autoload via
-    `get_node_or_null("/root/GameState")`, guarded by `is_inside_tree()` so
-    it's a quiet no-op outside a live tree instead of an error. `step()`
-    calls `CollisionSystem.check_obstacles()` whenever a real game_state is
-    found.
-  - `world.tscn`: added one `Obstacle` (700, 550) and one `MovingObstacle`
-    (1100, 640; amplitude 150, period 3s) instance.
-  - **Key discovery**: bare autoload identifiers (e.g. writing `GameState`
-    directly in code) fail to *compile*, not just fail at runtime, when a
-    script is loaded via `godot4 --headless -s <script>` - confirmed with a
-    direct probe script. Autoloads only get injected as globals during a
-    real project boot (main_scene load). This is why `world.gd` uses
-    `get_node_or_null("/root/GameState")` (a runtime string lookup) instead
-    of the bare identifier - it compiles everywhere and simply returns null
-    when there's no live autoload to find.
+- Milestones 0-8: see ROADMAP.md and earlier CHANGELOG entries.
+- **Milestone 9 — endless spawning and difficulty:**
+  - `DifficultyCurve` (`scripts/world/difficulty_curve.gd`): pure
+    `compute_scroll_speed(distance_traveled)`, linear ramp from
+    `base_speed` (200) capped at `max_speed` (500).
+  - `ScrollManager` updated: `scroll_speed` is no longer constant -
+    `advance(delta)` recomputes it from the new `distance_traveled` via an
+    owned `DifficultyCurve`, after using the *current* speed to advance
+    distance (same order as `Player.integrate_physics`'s velocity handling).
+  - `ObstacleSpawner` (`scripts/world/obstacle_spawner.gd`): pure
+    `should_spawn(distance_traveled)` / `compute_interval(distance_traveled)`
+    - spawn spacing tightens toward `min_interval` as distance grows.
+    Decoupled from Godot entirely; deciding what/where to spawn is
+    `world.gd`'s job.
+  - `world.gd`: `_spawn_obstacle()` instances a random `Obstacle` or
+    `MovingObstacle` ahead of the player (900px lookahead, randomized Y)
+    each time `spawner.should_spawn()` fires. `_despawn_old_obstacles()`
+    frees anything more than 300px behind the player, keeping the run
+    bounded rather than growing the scene tree forever.
+  - `world.tscn`: removed the 2 hand-placed obstacles from Milestone 8 -
+    spawning is now fully procedural, starting from zero.
 
 ## TESTED
 
-- `tests/test_obstacle.gd` (5/5): scene instantiation, default/overridable
-  radius, static (no movement).
-- `tests/test_moving_obstacle.gd` (8/8): scene instantiation and
-  inheritance from `Obstacle`, sine-offset math at quarter/half/
-  three-quarter period, `advance()` applying it to `position.y` correctly
-  over multiple calls.
-- `tests/test_world.gd` extended (12/12, was 6/6): `gather_obstacles()`
-  returns exactly the 2 real obstacles (not `Player`, not the 4 cosmetic
-  Markers) with correct position/radius; `get_game_state()` is null under
-  `-s` test mode; `step()` doesn't crash when it is.
-- All previous tests still pass unchanged - 65 total assertions across 7
+- `tests/test_difficulty_curve.gd` (5/5): ramp correctness, cap behavior,
+  monotonicity.
+- `tests/test_scroll_manager.gd` (7/7, new): self-consistency between
+  `scroll_speed` and the difficulty curve across many steps, cap respected.
+- `tests/test_obstacle_spawner.gd` (9/9): threshold timing, interval
+  shrink/clamp behavior.
+- `tests/test_world.gd` (15/15, was 12/12): starts with zero obstacles;
+  spawns at least one after enough distance; stays bounded (not unbounded
+  growth) over a long simulated run (65 fast-forwarded seconds); other
+  Milestone 6-8 coverage retained.
+- All previous tests still pass unchanged - 89 total assertions across 10
   test files.
-- `scripts_dev/validate.sh`'s real project-boot check now exercises the
-  actual `GameState` autoload path through `World.step()` for the first
-  time, with zero errors (no death triggers during this smoke check since
-  `GameState` starts at `MENU`, not `PLAYING` - nothing sets it to
-  `PLAYING` anywhere yet, that's Milestone 11).
+- `scripts_dev/validate.sh`, `test.sh`, `build.sh` all pass, including the
+  real project-boot check.
 
 ## NOT TESTED
 
 - Godot Editor GUI (deferred to PC).
 - Android SDK / export template setup.
-- **A real collision actually happening on screen** - `GameState` is never
-  transitioned to `PLAYING` yet (Milestone 11), so the death trigger has
-  never fired outside `tests/test_collision_system.gd`'s isolated
-  `GameState` instance.
-- Visual/feel verification carried over from Milestones 5-6-8 (scrolling
-  illusion, camera smoothing, touch responsiveness, obstacle appearance,
-  oscillation feel) - still outstanding, still requires
-  `[MANUAL-ANDROID]` or `[PC-GODOT]`.
+- **Visual/feel of anything in this milestone**: does the difficulty ramp
+  feel fair, do obstacles read clearly as they scroll in/out, does the
+  spawn/despawn cadence look reasonable on screen. Same carried-over debt
+  as Milestones 5, 6, 8 - still requires `[MANUAL-ANDROID]` or `[PC-GODOT]`.
+- Real collision with a *procedurally spawned* obstacle - `GameState` still
+  never reaches `PLAYING` (Milestone 11), so death-on-collision has still
+  only ever been exercised via `tests/test_collision_system.gd`'s isolated
+  instance.
 
 ## KNOWN ISSUES
 
 - RAM is tight on this device (~700 MiB "available" observed during
   discovery). Avoid heavy concurrent processes when running Godot.
-- Visual/feel checks for Milestones 5, 6, and 8 remain overdue - not a
-  blocker for continued logic-first progress, but shouldn't be deferred
-  indefinitely. Getting real eyes on a running session is worth doing soon.
+- Visual/feel checks for Milestones 5, 6, 8, and now 9 remain overdue -
+  not a blocker for continued logic-first progress, but this backlog is
+  growing and shouldn't be deferred indefinitely. Worth a dedicated PC/
+  Android session soon.
 
 ## BLOCKERS
 
@@ -109,14 +99,13 @@ an open question (see `docs/android_build.md`).
 
 ## NEXT ACTION
 
-Begin Milestone 9 (Endless Mode and Difficulty): procedural obstacle
-spawning (using `Obstacle`/`MovingObstacle` from this milestone) and a
-difficulty curve tied to `ScrollManager.distance_traveled`. This will also
-be the natural point to finally see obstacles actually appear and disappear
-during a run, rather than the 2 fixed instances placed by hand in
-`world.tscn`.
+Begin Milestone 10 (Score and Persistence): distance/time-based score
+(likely just `ScrollManager.distance_traveled`, already tracked) and local
+high-score save/load. Also a good moment to consider finally doing the
+overdue visual/feel pass across Milestones 5, 6, 8, 9 before the backlog
+grows further.
 
 ## NEXT ENVIRONMENT
 
-`[UBUNTU-CLI]` (spawning/difficulty logic), `[MANUAL-ANDROID]` / `[PC-GODOT]`
-still owed for Milestones 5, 6, 8 feel verification
+`[UBUNTU-CLI]` (scoring/persistence logic), `[MANUAL-ANDROID]` / `[PC-GODOT]`
+increasingly overdue for Milestones 5, 6, 8, 9 feel verification

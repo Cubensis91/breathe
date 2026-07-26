@@ -251,12 +251,54 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   `[PC-GODOT]`/`[MANUAL-ANDROID]` for visual placement/feel (not done).
 
 ## Milestone 9 — Endless Mode and Difficulty
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — logic/wiring done and tested; visual feel unverified
 
 - Objective: Procedural obstacle spawning, difficulty scaling over
   time/distance.
+- What landed:
+  - `scripts/world/difficulty_curve.gd` (`DifficultyCurve`, `RefCounted`):
+    pure `compute_scroll_speed(distance_traveled)` - linear ramp from
+    `base_speed` (200) up to a `max_speed` cap (500) via `ramp_rate`.
+  - `scripts/world/scroll_manager.gd` updated: `scroll_speed` is no longer
+    constant - `advance(delta)` now recomputes it from `distance_traveled`
+    via an owned `DifficultyCurve` after advancing distance (current speed
+    integrates position first, then the new distance informs next step's
+    speed - same "integrate then update" order `Player.integrate_physics`
+    already uses for velocity).
+  - `scripts/world/obstacle_spawner.gd` (`ObstacleSpawner`, `RefCounted`):
+    the WHEN-to-spawn rule, decoupled from Godot nodes/scenes. `should_spawn
+    (distance_traveled)` returns true once `distance_traveled` crosses
+    `next_spawn_distance`, then advances that threshold by
+    `compute_interval(distance_traveled)` - a spacing that tightens (down
+    to `min_interval`) as distance grows, so obstacles come faster over a
+    longer run. Deciding WHAT/WHERE to spawn and actually instancing nodes
+    stays in `world.gd` - Godot-specific side effects don't belong in this
+    pure timing rule.
+  - `world.gd`: `_spawn_obstacle()` instances a random `Obstacle` or
+    `MovingObstacle` ahead of the player (`spawn_lookahead_x` = 900,
+    random Y within a placeholder-tuned band) whenever
+    `spawner.should_spawn()` fires each `step()`. `_despawn_old_obstacles()`
+    frees any obstacle that's fallen more than `despawn_margin_x` (300)
+    behind the player, keeping the scene tree bounded over an endless run.
+  - `world.tscn` no longer hand-places any obstacles (Milestone 8's
+    `Obstacle1`/`MovingObstacle1` removed along with their now-unused
+    `ext_resource` entries) - spawning is fully procedural now.
+- Acceptance criteria: difficulty speed ramp is correct and capped
+  (`tests/test_difficulty_curve.gd`, 5/5); `ScrollManager.advance()` stays
+  self-consistent with the difficulty curve and never exceeds `max_speed`
+  after many steps (`tests/test_scroll_manager.gd`, 7/7); spawn-timing
+  thresholds and interval-tightening are correct
+  (`tests/test_obstacle_spawner.gd`, 9/9); `World` starts with zero
+  obstacles, spawns at least one after enough distance, and stays bounded
+  (not unbounded growth) over a long simulated run
+  (`tests/test_world.gd`, 15/15, was 12/12).
+- Acceptance criteria (visual/feel): **not yet verified** - same
+  carried-over debt as Milestones 5, 6, 8. Nobody has watched obstacles
+  actually spawn/scroll/despawn on screen, or felt whether the difficulty
+  ramp feels fair.
+- Dependencies: Milestones 6, 8.
 - Environment: `[UBUNTU-CLI]`. Headless testable: Yes (spawn/difficulty
-  curves).
+  curves) - done. Visual feel: `[MANUAL-ANDROID]`/`[PC-GODOT]` (not done).
 
 ## Milestone 10 — Score and Persistence
 **Status: NOT STARTED**
