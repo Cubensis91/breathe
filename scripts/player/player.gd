@@ -26,6 +26,13 @@ const BreathingControllerScript = preload("res://scripts/player/breathing_contro
 
 var velocity: Vector2 = Vector2.ZERO
 
+## Collision radius (Milestone 8), matching the CollisionShape2D's
+## CircleShape2D radius in player.tscn (kept in sync manually - there's no
+## Godot physics body involved in collision detection, see
+## scripts/systems/collision_system.gd, so this is the actual source of
+## truth for the game-logic collision check, not the CollisionShape2D).
+@export var radius: float = 16.0
+
 func get_breathing() -> BreathingControllerScript:
 	return get_node_or_null("BreathingController") as BreathingControllerScript
 

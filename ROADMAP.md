@@ -197,10 +197,58 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   `[MANUAL-ANDROID]`/`[PC-GODOT]`.
 
 ## Milestone 8 — Static and Moving Obstacles
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — logic/wiring done and tested; visual feel unverified
 
 - Objective: One static obstacle type, one moving obstacle type.
-- Environment: `[UBUNTU-CLI]` for logic, `[PC-GODOT]` for visual placement.
+- What landed:
+  - `scripts/world/obstacle.gd` (`Obstacle`, `Node2D`) - the static type:
+    just an exported `radius` and a scene position. "Static" means there's
+    no movement script at all. No `Area2D`/`CollisionShape2D` - Milestone 7
+    already decided collision is pure geometry, not physics-engine overlap,
+    so no physics body is needed.
+  - `scripts/world/moving_obstacle.gd` (`MovingObstacle`, extends
+    `obstacle.gd` via file-path `extends`) - the moving type: vertical sine
+    oscillation around an explicit `origin_y`, via a pure
+    `compute_offset_y(elapsed_time)` and `advance(delta)`. `origin_y` is
+    set explicitly (matching the node's scene position) rather than
+    captured in `_ready()`, avoiding any tree-entry timing dependency.
+  - `obstacle.tscn` / `moving_obstacle.tscn` - placeholder `Polygon2D`
+    visuals (red / orange squares) matching each script.
+  - `player.gd` gained an exported `radius` (16.0, matching its
+    `CollisionShape2D`) so `Player` exposes the same position+radius
+    contract `Obstacle` does - both sides `CollisionSystem` needs.
+  - `world.gd`: `gather_obstacles()` collects direct children that are
+    `Obstacle` instances (structural check via `is ObstacleScript`, no live
+    tree needed) into the `{"position", "radius"}` shape
+    `CollisionSystem.check_obstacles()` expects. `get_game_state()` looks
+    up the real `GameState` autoload via `get_node_or_null("/root/GameState")`
+    - **not** the bare `GameState` identifier, which turned out to fail to
+    even *compile* when a script is loaded via `godot4 --headless -s`
+    (confirmed by direct probe) since autoloads are only injected as
+    globals during a real project boot. `is_inside_tree()` guards this
+    lookup so it degrades to a quiet no-op in tests instead of logging
+    absolute-path errors. `step()` now calls
+    `CollisionSystem.check_obstacles()` whenever a real game_state is found.
+  - `world.tscn` gained one `Obstacle` instance (700, 550) and one
+    `MovingObstacle` instance (1100, 640, amplitude 150, period 3s).
+- Acceptance criteria: `Obstacle`/`MovingObstacle` scenes instantiate with
+  correct default/overridable radius; oscillation math is correct at
+  quarter/half/three-quarter period; `World.gather_obstacles()` correctly
+  collects exactly the 2 real obstacles (not `Player`, not the 4 cosmetic
+  Markers); `get_game_state()` is null under `-s` test mode and `step()`
+  doesn't crash when it is. `tests/test_obstacle.gd` (5/5),
+  `tests/test_moving_obstacle.gd` (8/8), extended `tests/test_world.gd`
+  (12/12, was 6/6) all pass. Project still boots headlessly with the real
+  `GameState` autoload wired through `World.step()` without error (this is
+  the first time that code path has actually run against the real
+  singleton, even though `GameState` starts at MENU so no death trigger
+  fires during the boot check).
+- Acceptance criteria (visual/feel): **not yet verified** - same carried-over
+  debt as Milestones 5-6. Nobody has looked at the obstacles rendering,
+  the oscillation feeling right, or an actual collision happening on screen.
+- Dependencies: Milestones 6, 7.
+- Environment: `[UBUNTU-CLI]` for logic (done, headlessly tested).
+  `[PC-GODOT]`/`[MANUAL-ANDROID]` for visual placement/feel (not done).
 
 ## Milestone 9 — Endless Mode and Difficulty
 **Status: NOT STARTED**

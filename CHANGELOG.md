@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `Obstacle` (`scripts/world/obstacle.gd`, the static obstacle type) and
+  `MovingObstacle` (`scripts/world/moving_obstacle.gd`, vertical sine
+  oscillation around an explicit `origin_y`), with placeholder
+  `Polygon2D` visuals. `Player` gained an exported `radius` matching its
+  `CollisionShape2D`. `World.gather_obstacles()` collects real obstacle
+  children; `World.get_game_state()` looks up the real `GameState`
+  autoload via `get_node_or_null("/root/GameState")` (bare autoload
+  identifiers fail to compile under `-s` script mode - discovered by
+  direct probe) and wires it into `CollisionSystem.check_obstacles()`.
+  `world.tscn` now has one of each obstacle type. Tests:
+  `tests/test_obstacle.gd` (5/5), `tests/test_moving_obstacle.gd` (8/8),
+  extended `tests/test_world.gd` (12/12, was 6/6). Visual/feel of the
+  obstacles is **not yet verified**.
 - `CollisionSystem` (`scripts/systems/collision_system.gd`): pure
   `circles_overlap()` geometry plus `check_obstacles()`, which triggers a
   `game_state.transition_to(DEAD)` when an obstacle overlaps the player
