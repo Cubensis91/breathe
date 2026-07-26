@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- Test suite consolidation (Milestone 13): audited existing coverage
+  against state transitions/scoring/movement/collision/difficulty/
+  spawning/persistence/config - found and fixed one real gap
+  (`MENU -> DEAD`, the one untested illegal `GameState` transition pair;
+  `tests/test_game_state.gd` now 17/17). `scripts_dev/test.sh` now
+  aggregates every test file's summary line into a suite-wide total
+  (verified correct on both a passing run and a deliberately-injected
+  failing test). Documented the testing convention in
+  `docs/development_workflow.md` for future sessions/PC continuation to
+  follow directly instead of reverse-engineering it from existing files.
 - Audio system (Milestone 12): `AudioSettings` (on/off, `FileAccess`-backed,
   same pattern as `HighScorePersistence`) and `AudioController`
   (`scripts/audio/audio_controller.gd` + `audio_controller.tscn`, 4

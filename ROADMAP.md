@@ -454,10 +454,44 @@ no real audio assets exist yet, so there is nothing audible to verify
   blocked on real audio assets existing at all.
 
 ## Milestone 13 — Automated Validation and Testing
-**Status: NOT STARTED**
+**Status: COMPLETED**
 
 - Objective: Consolidate headless test suite covering state transitions,
   scoring, movement, collision, difficulty, spawning, persistence, config.
+- What landed: since tests have been written incrementally throughout
+  every prior milestone (not deferred to this one), the objective's areas
+  were already almost entirely covered by the existing 15-file/146-
+  assertion suite. This milestone's actual work was auditing that
+  suite for real gaps and consolidating, not writing tests for quantity:
+  - **Found and fixed one real gap**: `tests/test_game_state.gd` tested
+    5 of the 6 (from, to) pairs in `_ALLOWED_TRANSITIONS` (plus a no-op
+    self-transition), but never `MENU -> DEAD` (the one remaining illegal
+    pair). Added it - now every transition pair the state machine can be
+    asked to make has a direct test. 17/17 (was 15/15).
+  - **`scripts_dev/test.sh`** now parses each test file's own
+    `<name>: N passed, M failed` summary line and prints a suite-wide
+    total (`TEST: TOTAL 148 passed, 0 failed, across 15 file(s)`) instead
+    of only a per-file pass/fail list - verified against both a fully
+    passing run and a deliberately-injected failing test (added and
+    removed as a temporary probe, confirmed correct detection/reporting
+    in both cases, confirmed no trace left behind).
+  - **Documented the testing convention** in
+    `docs/development_workflow.md` ("Writing tests"): the
+    `SceneTree`/`_check`/summary-line shape test.sh depends on, and four
+    hard-won lessons future test-writing should account for -
+    `preload()` over `class_name` resolution, the `-s` mode
+    autoload/absolute-path limitation (confirmed via direct probe, not
+    assumed), the GDScript lambda-capture-by-value gotcha (hit in
+    Milestone 12), and preferring real invariants over timing-dependent
+    assertions (a lesson from a flaky check removed in Milestone 9).
+- Acceptance criteria: audited existing coverage against the objective's
+  named areas (state transitions, scoring, movement, collision,
+  difficulty, spawning, persistence, config) - all covered, one genuine
+  gap found and closed. `scripts_dev/test.sh` aggregate reporting verified
+  correct on both pass and fail. Testing convention documented for future
+  sessions/PC continuation to follow without reverse-engineering it from
+  existing files.
+- Dependencies: Milestones 3-12 (this milestone reviews their tests).
 - Environment: `[UBUNTU-CLI]`.
 
 ## Milestone 14 — PC Handoff

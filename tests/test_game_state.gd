@@ -48,8 +48,15 @@ func _initialize() -> void:
 	gs2.transition_to(gs2.State.DEAD)
 	_check(gs2.transition_to(gs2.State.MENU) == true, "DEAD -> MENU is allowed")
 
+	# MENU -> DEAD is the one (from, to) pair not yet covered above - every
+	# other entry/non-entry in _ALLOWED_TRANSITIONS now has a direct test.
+	var gs3 = GameStateScript.new()
+	_check(gs3.transition_to(gs3.State.DEAD) == false, "MENU -> DEAD is rejected (not an allowed transition)")
+	_check(gs3.is_menu(), "state unchanged after rejected MENU -> DEAD transition")
+
 	gs.free()
 	gs2.free()
+	gs3.free()
 
 	print("test_game_state: %d passed, %d failed" % [_passed, _failed])
 	quit(1 if _failed > 0 else 0)
