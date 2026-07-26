@@ -25,8 +25,7 @@ Milestone 8 — PARTIALLY COMPLETED (logic/wiring done and tested; visual feel u
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`625f185` — "feat: add static and moving obstacles, wire into collision rule (Milestone 8)"
 
 ## COMPLETED
 
