@@ -24,8 +24,7 @@ Milestone 7 — COMPLETED (rule) — runtime wiring deferred to Milestone 8
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`be08c1b` — "feat: add CollisionSystem (Milestone 7, rule only)"
 
 ## COMPLETED
 
