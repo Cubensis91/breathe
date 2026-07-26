@@ -12,11 +12,15 @@ cd breathe
 ```
 
 Then:
-1. Open the project in Godot 4.x Editor (`project.godot` at repo root, once
-   Milestone 2 has created it — see `docs/current_status.md` for whether
-   this exists yet).
-2. Verify the project imports without errors.
-3. Run the project (F5) and confirm it launches.
+1. Open the project in Godot 4.x Editor (`project.godot` at repo root).
+2. Verify the project imports without errors. This will be the first time
+   the project is scanned by the actual Editor - see the note in
+   `docs/current_status.md` about `class_name` global resolution; nothing
+   should break, but this is worth watching for on first import.
+3. Run the project (F5) and confirm it launches into `world.tscn` (the
+   current `main_scene` - a Player swimming forward through placeholder
+   scroll markers, controlled by hold/release). See
+   `docs/current_status.md` for exactly what's implemented vs. not.
 4. Read `ROADMAP.md` for the milestone plan.
 5. Read `ARCHITECTURE.md` for the code layout/principles.
 6. Read `docs/current_status.md` for exactly what's done vs. not.

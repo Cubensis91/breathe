@@ -114,11 +114,51 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
   Manual Android test required: touch responsiveness and feel (not done).
 
 ## Milestone 6 — World Movement and Camera
-**Status: NOT STARTED**
+**Status: PARTIALLY COMPLETED** — logic/wiring done and tested; visual feel unverified
 
 - Objective: Scrolling/endless world illusion, camera following the player.
-- Environment: `[HYBRID]`. Camera behavior partially headless-testable;
-  visual feel requires manual/PC testing.
+- What landed:
+  - `scripts/world/scroll_manager.gd` (`ScrollManager`, `RefCounted`):
+    `scroll_speed` + `distance_traveled`, `advance(delta)` pure arithmetic.
+    Feeds Milestone 9 (difficulty) and Milestone 10 (scoring) later.
+  - `scripts/world/world.gd` + `world.tscn` (`World`, `Node2D`): the first
+    real gameplay scene. `step(delta)` advances `ScrollManager` and sets
+    `player.velocity.x = scroll_manager.scroll_speed` (constant forward
+    motion). Instances `player.tscn` as a child, plus four static
+    `Polygon2D` markers at fixed world-space X positions purely so a human
+    tester has something visible to confirm scrolling against (placeholder,
+    swappable for real background art in Milestone 15).
+  - **Camera-follow needed no new code**: `Camera2D` was added as a child
+    of `Player` in `player.tscn` with `position_smoothing_enabled`, so it
+    tracks the player's transform automatically via normal scene-tree
+    parenting.
+  - `player.gd` updated: `integrate_physics()` now looks up a
+    `BreathingController` child (if present) via `get_node_or_null()` and
+    uses `compute_velocity_y()` to drive `velocity.y`. Looked up lazily
+    (not cached with `@onready`) so it behaves identically whether the
+    node is bare, scene-instantiated, or added to a live tree - this is
+    what makes it possible to keep testing `Player` in isolation (no
+    children) alongside testing it fully wired (scene, with
+    `BreathingController` + `Camera2D` children).
+  - `project.godot`: `run/main_scene` now points at `world.tscn` (was the
+    Milestone 2 `bootstrap.tscn`, which has been deleted - its only job,
+    proving headless boot works, is now done more strongly by booting the
+    real gameplay scene).
+- Acceptance criteria (logic/wiring): `world.tscn` instantiates; `World`
+  finds its `Player` child; after stepping, `player.velocity.x` tracks
+  `scroll_speed` and `player.position.x` / `distance_traveled` advance
+  correctly; `Player` scene instance finds its `BreathingController` child
+  and holding drives it upward. `tests/test_world.gd` (6/6) and updated
+  `tests/test_player.gd` (9/9) pass. Project boots headlessly with
+  `world.tscn` as main scene.
+- Acceptance criteria (visual/feel): **not yet verified.** Nobody has
+  looked at this running - whether the markers actually read as "scrolling
+  world," whether the camera-follow smoothing feels right, and touch
+  responsiveness from Milestone 5 all require `[MANUAL-ANDROID]` or
+  `[PC-GODOT]` testing this milestone doesn't include.
+- Dependencies: Milestones 4, 5.
+- Environment: `[HYBRID]`. Camera/world logic: `[UBUNTU-CLI]`, headlessly
+  tested (done). Visual feel: `[MANUAL-ANDROID]` / `[PC-GODOT]` (not done).
 
 ## Milestone 7 — Collision System
 **Status: NOT STARTED**

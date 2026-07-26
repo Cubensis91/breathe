@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `ScrollManager` (`scripts/world/scroll_manager.gd`): constant forward
+  scroll speed + accumulating distance traveled, feeding the endless-world
+  illusion (and later difficulty/scoring milestones).
+- `World` (`scripts/world/world.gd`, `scripts/world/world.tscn`): the first
+  real gameplay scene. Ties `Player` + `BreathingController` together with
+  constant forward motion; includes static placeholder markers as a visual
+  scroll reference. `project.godot` `run/main_scene` now points here
+  (replacing Milestone 2's now-deleted `bootstrap.tscn`).
+- Camera-follow via scene composition: `Camera2D` added as a child of
+  `Player` in `player.tscn` with `position_smoothing_enabled` - no custom
+  script needed.
+- `player.gd`: `integrate_physics()` now drives `velocity.y` from a child
+  `BreathingController` if one exists (looked up lazily, not cached), so
+  `Player` still works identically in isolation (no children, existing
+  tests) and fully wired (scene instance).
+- `tests/test_world.gd` (6/6 assertions); `tests/test_player.gd` extended
+  to cover the scene's `BreathingController` wiring (9/9 assertions).
+  Touch/visual feel for the scrolling world and camera-follow is **not yet
+  verified** - requires manual Android/PC testing.
 - `BreathingController` (`scripts/player/breathing_controller.gd`): hold →
   inhale → rise / release → exhale → descend, via a pure
   `compute_velocity_y()` function (ramped acceleration using `move_toward`,

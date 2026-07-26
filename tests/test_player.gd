@@ -21,12 +21,22 @@ func _initialize() -> void:
 	var scene_instance = PlayerScene.instantiate()
 	_check(scene_instance is Area2D, "player.tscn instantiates as an Area2D")
 	_check(scene_instance.velocity == Vector2.ZERO, "player.tscn instance starts with zero velocity")
+
+	# Milestone 6: player.tscn now includes a BreathingController child, and
+	# integrate_physics() should use it to drive velocity.y.
+	var breathing = scene_instance.get_breathing()
+	_check(breathing != null, "player.tscn instance finds its BreathingController child")
+	breathing.set_holding(true)
+	scene_instance.integrate_physics(0.1)
+	_check(scene_instance.velocity.y < 0.0, "holding via the scene's BreathingController makes the scene instance rise")
+
 	scene_instance.free()
 
-	# Script logic in isolation (no scene tree needed).
+	# Script logic in isolation (no scene tree, no children - Milestone 4 behavior).
 	var p = PlayerScript.new()
 	_check(p.position == Vector2.ZERO, "default position is origin")
 	_check(p.velocity == Vector2.ZERO, "default velocity is zero")
+	_check(p.get_breathing() == null, "a bare Player with no children has no BreathingController")
 
 	p.velocity = Vector2(0, -200)
 	p.integrate_physics(0.5)

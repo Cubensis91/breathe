@@ -13,7 +13,7 @@ config_version=5
 
 config/name="BREATHE"
 config/description="Breathe. Rise. Survive."
-run/main_scene="res://scripts/core/bootstrap.tscn"
+run/main_scene="res://scripts/world/world.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [display]
