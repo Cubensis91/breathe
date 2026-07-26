@@ -27,8 +27,7 @@ Milestone 10 — COMPLETED
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`6db9f42` — "feat: add scoring and local high-score persistence (Milestone 10)"
 
 ## COMPLETED
 
