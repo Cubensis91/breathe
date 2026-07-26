@@ -20,8 +20,7 @@ Milestone 4 — COMPLETED
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`6c9a3d4` — "feat: add Player controller (Milestone 4)"
 
 ## COMPLETED
 
