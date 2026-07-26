@@ -32,8 +32,7 @@ Milestone 13 — COMPLETED
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`904d959` — "test: consolidate headless test suite (Milestone 13)"
 
 ## COMPLETED
 
