@@ -29,8 +29,7 @@ possible; full-flow and visual feel unverified)
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`92e5999` — "feat: wire GameState into full flow, add minimal HUD (Milestone 11)"
 
 ## COMPLETED
 
