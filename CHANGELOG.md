@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- `GameState` core singleton (`scripts/core/game_state.gd`, autoloaded):
+  MENU/PLAYING/DEAD state machine with an explicit legal-transition table
+  and a `state_changed` signal.
+- Headless GDScript test convention (`tests/test_*.gd` via
+  `godot4 --headless -s`); `tests/test_game_state.gd` covering the state
+  machine's transition rules.
+- `scripts_dev/test.sh` now runs the GDScript test suite instead of only
+  doing a boot check.
 - Initial repository bootstrap: directory structure, documentation set
   (README, CONTRIBUTING, ROADMAP, ARCHITECTURE, docs/).
 - Environment discovery documented in `docs/setup.md`.

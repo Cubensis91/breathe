@@ -6,3 +6,5 @@ extends Node
 
 func _ready() -> void:
 	print("BREATHE bootstrap: pipeline validation OK")
+	assert(GameState.is_menu(), "GameState autoload should default to MENU")
+	print("BREATHE bootstrap: GameState autoload wired, state=%s" % GameState.State.keys()[GameState.current_state])

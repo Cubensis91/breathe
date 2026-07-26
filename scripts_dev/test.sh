@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Run the headless-testable portion of the test suite.
+# Run the headless GDScript test suite under tests/.
 #
-# Current scope (Milestone 2): boots the project headlessly and confirms no
-# errors. As Milestone 13 (Automated Validation and Testing) adds real
-# GDScript tests under tests/, this script will invoke them via a headless
-# Godot test runner script. Kept intentionally small until there's actual
-# test content to run.
+# Convention: each tests/test_*.gd extends SceneTree, does its own
+# assertions in _initialize(), prints a summary, and calls quit(0) on
+# success / quit(1) on failure. This script runs each one via
+# `godot4 --headless -s <file>` and fails if any of them exit non-zero.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,12 +23,30 @@ if ! "$GODOT_BIN" --headless --path "$REPO_ROOT" --quit; then
   exit 1
 fi
 
-test_files=(tests/*.gd)
-if [ -e "${test_files[0]}" ]; then
-  echo "TEST: found GDScript test files but no test runner is wired up yet."
-  echo "TEST: this is expected until Milestone 13 - update this script then."
-else
-  echo "TEST: no GDScript tests under tests/ yet (expected pre-Milestone 13)."
+shopt -s nullglob
+test_files=(tests/test_*.gd)
+shopt -u nullglob
+
+if [ "${#test_files[@]}" -eq 0 ]; then
+  echo "TEST: no GDScript tests under tests/ yet."
+  echo "TEST: PASSED (boot check only)"
+  exit 0
 fi
 
-echo "TEST: PASSED (boot check only, at current milestone)"
+failures=0
+for f in "${test_files[@]}"; do
+  echo "TEST: running $f ..."
+  if "$GODOT_BIN" --headless --path "$REPO_ROOT" -s "res://$f"; then
+    echo "TEST: $f PASSED"
+  else
+    echo "TEST: $f FAILED" >&2
+    failures=$((failures + 1))
+  fi
+done
+
+if [ "$failures" -gt 0 ]; then
+  echo "TEST: FAILED - $failures test file(s) failed" >&2
+  exit 1
+fi
+
+echo "TEST: ALL PASSED (${#test_files[@]} test file(s))"

@@ -43,11 +43,23 @@ Environment tags: `[TERMUX]` `[UBUNTU-CLI]` `[GITHUB]` `[PC-GODOT]`
 - Environment: `[UBUNTU-CLI]`. Headless testable: Yes. PC required: No.
 
 ## Milestone 3 — Core Architecture
-**Status: NOT STARTED**
+**Status: COMPLETED (state layer) — other layers land in their own milestones**
 
 - Objective: Establish the separation of game logic / input / physics /
   state / world / UI / audio / persistence described in ARCHITECTURE.md as
   plain GDScript classes, independent of scenes.
+- What landed: `scripts/core/game_state.gd` — the `GameState` autoload
+  singleton (MENU/PLAYING/DEAD enum, `transition_to()` with an explicit
+  legal-transition table, `state_changed` signal). This is the one piece of
+  core architecture with real behavior today; input/physics/world/UI/audio/
+  persistence are intentionally left for Milestones 4-12, where they'll have
+  actual logic to contain instead of empty placeholder files.
+- Acceptance criteria: `GameState` autoload boots correctly (verified via
+  `bootstrap.gd` asserting default state); headless test
+  `tests/test_game_state.gd` covers default state, legal transitions,
+  illegal-transition rejection, no-op transitions, and signal emission —
+  15/15 assertions pass.
+- Dependencies: Milestone 2.
 - Environment: `[UBUNTU-CLI]`. Headless testable: Partially (structure and
   unit-testable logic, not rendering). PC required: No.
 
