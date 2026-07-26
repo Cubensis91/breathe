@@ -21,8 +21,7 @@ Milestone 5 — PARTIALLY COMPLETED (logic done and tested; touch feel unverifie
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`a8122c5` — "feat: add BreathingController (Milestone 5, partial)"
 
 ## COMPLETED
 
