@@ -17,5 +17,8 @@ export_presets.cfg
 .DS_Store
 *.swp
 
+# Local Claude Code tool settings (machine-specific, not project content)
+.claude/
+
 # Local Godot engine binary (downloaded per-environment, not committed)
 /.local_bin/
