@@ -39,8 +39,8 @@ and tested; not yet wired into a scene/PlayerPair/EnergyBond)
 
 ## LATEST STABLE COMMIT
 
-(pending — this session's commit not yet made at time of writing; see
-`git log` for the actual latest hash)
+`8479f5b` — feat: recover and verify OrbitController for two-entity orbit
+pivot (Milestone 17)
 
 ## PC SESSION — 2026-07-28
 
