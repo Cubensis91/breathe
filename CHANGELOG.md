@@ -32,6 +32,28 @@ All notable changes to this project are documented here.
   `get_entity_a_offset()`/`get_entity_b_offset()` for the two entities'
   positions around a shared center. `tests/test_orbit_controller.gd`
   (21/21). See ROADMAP.md Milestone 17 for what's landed vs. still open.
+- `scripts/player/energy_bond.gd` (`EnergyBond`, extends `Line2D`):
+  presentation-only bond rendering, driven entirely by a public
+  `update(entity_a, entity_b, energy_level)` - a 3-point line whose
+  midpoint bows proportional to `energy_level`, with width/alpha scaling
+  too. Never reads gameplay state back out. `tests/test_energy_bond.gd`
+  (14/14).
+- `scripts/player/player_pair.gd` + `player_pair.tscn` (`PlayerPair`,
+  extends `Node2D`): composes `EntityA`/`EntityB` (placeholder
+  `Polygon2D`), a reused/unmodified `BreathingController`, and
+  `EnergyBond` around an owned `OrbitController` instance. Completes the
+  `BreathingController -> OrbitController -> PlayerPair -> EnergyBond`
+  pivot data flow - `PlayerPair` is now the one place breathing intent
+  drives both vertical ascent/descent and orbit state, while
+  `BreathingController` itself stays unmodified and reusable.
+  `tests/test_player_pair.gd` (23/23). Full suite: 206/206 assertions, 18
+  files.
+- `scripts/player/orbit_prototype.gd` + `.tscn`: minimal standalone
+  playtest harness (forces `GameState` to `PLAYING` so
+  `BreathingController`'s input gate doesn't block hold/release outside
+  `World`'s normal tap-to-start flow) - open and press F6 to test the new
+  pair in isolation. The old `Player`/`World` single-entity flow remains
+  completely untouched and is still `main_scene`.
 - `docs/pc_handoff.md` refreshed for accuracy (Milestone 14): updated
   stale Milestone 12 references, corrected the `class_name`/`preload()`
   explanation pointer to `docs/development_workflow.md`, added real-audio

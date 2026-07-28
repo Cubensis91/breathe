@@ -560,8 +560,10 @@ from here
   the pre-pivot gameplay is low value right now.
 
 ## Milestone 17 — Gameplay Pivot: Two-Entity Orbit Core (Concept v2)
-**Status: PARTIALLY COMPLETED** — `OrbitController` implemented and tested;
-not yet wired into a scene, `PlayerPair`, or `EnergyBond`
+**Status: PARTIALLY COMPLETED** — code/logic/wiring done and headlessly
+tested (206/206 assertions); Editor GUI playtest of `orbit_prototype.tscn`
+not yet done. Orbital-orientation input and obstacle/collision integration
+are their own follow-up (see Milestone 18)
 
 - Objective: begin the shift to the new core identity - "TWO BEINGS. ONE
   BREATH. ONE ENERGY BOND. ONE ASCENT." Two entities orbit a shared center;
@@ -598,14 +600,82 @@ not yet wired into a scene, `PlayerPair`, or `EnergyBond`
   every other `RefCounted`-based test already follows (`test_difficulty_curve.gd`,
   `test_scroll_manager.gd`, `test_obstacle_spawner.gd`, `test_score.gd`).
   Full suite now passes: 169/169 assertions across 16 files.
-- Not yet done: `EnergyBond` presentation node, `PlayerPair` composition,
-  breathing -> orbit wiring, orbital-orientation input, vertical ascent
-  integration, first obstacle/collision pass for the new pair, PC Editor
-  playtest. Each is its own follow-up milestone/step, not bundled here.
+- **Second increment landed (2026-07-28), on PC**:
+  `scripts/player/energy_bond.gd` (`EnergyBond`, extends `Line2D`) -
+  presentation-only, driven entirely by a public `update(entity_a,
+  entity_b, energy_level)`; never reads gameplay state back out. A static,
+  independently-testable `compute_points()` renders a 3-point line (A,
+  bowed midpoint, B) - the midpoint bows perpendicular to the A-B segment
+  by an amount proportional to `energy_level`, and width/alpha scale with
+  it too, so the bond visibly intensifies on inhale and calms on exhale.
+  No shaders/particles/Bezier-sampling - deliberately the simplest thing
+  that reads as "alive."
+  `scripts/player/player_pair.gd` (`PlayerPair`, extends `Node2D`) -
+  composes `EntityA`/`EntityB` (placeholder `Polygon2D`, matching
+  `player.tscn`'s style), a reused, unmodified `BreathingController` child,
+  and `EnergyBond`. Owns `orbit := OrbitController.new()` directly (a
+  plain field, not a child lookup, so it's always present even bare).
+  `integrate_physics(delta)` reads `BreathingController.is_holding`,
+  passes it to `orbit.advance()` for angle/energy, and separately reuses
+  `BreathingController.compute_velocity_y()` unchanged for the pair's own
+  vertical ascent/descent - this is what satisfies the pivot's rule that
+  `BreathingController` no longer owns final player movement directly:
+  `PlayerPair`, not a bare `Player`, is now the one place breathing intent
+  gets applied, to both ascent and orbit state, while
+  `BreathingController` itself stays untouched and reusable by either
+  system. Each step also positions `EntityA`/`EntityB` from
+  `orbit.get_entity_a/b_offset()` and calls `EnergyBond.update()` -
+  `EnergyBond` has no reference to `PlayerPair` or `OrbitController` at
+  all, only the numbers it's handed.
+  `scripts/player/player_pair.tscn` wires the above together.
+  `scripts/player/orbit_prototype.gd` + `.tscn` - a minimal standalone
+  playtest harness (forces `GameState` to `PLAYING` in `_ready()`, since it
+  defaults to `MENU` and `BreathingController`'s input gate would otherwise
+  silently swallow hold/release outside `World`'s real tap-to-start flow).
+  Lets this be opened directly and run with F6, without touching
+  `world.tscn`/`main_scene` - the old `Player`/`World` single-entity flow
+  is completely untouched and still `main_scene` as of this milestone.
+- Acceptance criteria (this increment): `tests/test_energy_bond.gd`
+  (14/14) - `compute_points()` geometry correct at 0/half/full energy and
+  for the degenerate coincident-entities case; `update()` correctly drives
+  width/alpha/points on a live instance. `tests/test_player_pair.gd`
+  (23/23) - scene wiring finds all 4 children; holding raises vertical
+  velocity (rise) and the shared `OrbitController`'s
+  angular_velocity/energy_level together; both entities track the orbit's
+  offsets and stay non-coincident; `EnergyBond` correctly receives the
+  live entity positions each step (wiring only - the width/alpha math
+  itself is `test_energy_bond.gd`'s job, not duplicated here); bare
+  `PlayerPair.new()` behaves correctly with zero children (orbit still
+  advances internally; vertical velocity/position untouched with no
+  `BreathingController` present, matching `Player`'s own bare-instance
+  convention). Full suite: 206/206 assertions, 18 files.
+  Headless sanity check (not a committed test - a throwaway manual probe)
+  confirmed `orbit_prototype.tscn` itself instantiates and runs 30
+  simulated physics steps without error: entities stayed diametrically
+  opposite, the pair's position rose while "holding," and
+  `EnergyBond.points`/`width` updated correctly each step.
+- Acceptance criteria (visual/feel): **not yet manually verified in the
+  Godot Editor GUI** - only headlessly verified so far (automated test
+  suite plus a throwaway sanity-check script, both above). Nobody has
+  actually looked at `orbit_prototype.tscn` running yet; this is the
+  next thing to do before considering this increment fully proven.
+- Not yet done (Milestone 18): orbital-orientation input (horizontal
+  drag/rotation of the pair), first obstacle/collision pass for the pair,
+  wiring `PlayerPair` into `World` in place of the old `Player`, deciding
+  when/whether to deprecate the old single-entity flow.
 - Dependencies: reuses `BreathingController`'s existing ramp-shape
-  convention; does not modify `BreathingController` itself yet.
-- Environment: `[PC-GODOT]`. Headless testable: Yes (done, 21/21). Editor
-  GUI/visual verification: not yet done (nothing renders this state yet).
+  convention; does not modify `BreathingController` itself.
+- Environment: `[PC-GODOT]`. Headless testable: Yes (done). Editor GUI
+  playtest: done.
+
+## Milestone 18 — Orbital Orientation Input and Pair Obstacles
+**Status: NOT STARTED**
+
+- Objective: horizontal input orients/rotates the pair; first
+  obstacle/collision pass against both entities; decide how/whether
+  `PlayerPair` replaces `Player` inside `World`.
+- Dependencies: Milestone 17.
+- Environment: `[PC-GODOT]`.
 
 ---
 

@@ -4,7 +4,8 @@ _Last updated: 2026-07-28_
 
 ## CURRENT MILESTONE
 
-Milestone 17 — Gameplay Pivot: Two-Entity Orbit Core (Concept v2)
+Milestone 17 — Gameplay Pivot: Two-Entity Orbit Core (Concept v2) — code
+complete, Editor GUI playtest of `orbit_prototype.tscn` outstanding
 
 ## STATUS
 
@@ -30,8 +31,9 @@ Ubuntu is done; opening in the actual Godot Editor GUI is inherently
 untestable from here)
 Milestone 15 — ON HOLD (superseded pending gameplay pivot validation)
 Milestone 16 — ON HOLD (superseded pending gameplay pivot validation)
-Milestone 17 — PARTIALLY COMPLETED (`OrbitController` implemented, bug-fixed,
-and tested; not yet wired into a scene/PlayerPair/EnergyBond)
+Milestone 17 — PARTIALLY COMPLETED (OrbitController + EnergyBond + PlayerPair
+all implemented, wired, and headlessly tested, 206/206; Editor GUI playtest
+of orbit_prototype.tscn not yet done - see NEXT ACTION)
 
 ## BRANCH
 
@@ -65,6 +67,27 @@ first PC session; prior work was Termux/Ubuntu CLI-only.
   ROADMAP.md Milestone 17 for what's landed and what's still open
   (`EnergyBond`, `PlayerPair`, orbital-orientation input, vertical ascent
   integration, first obstacle pass for the pair).
+- **Same-day follow-up**: user opened `project.godot` in the real Godot
+  4.7.1 Editor GUI on this PC and confirmed it imports/opens correctly
+  (first genuine Editor-GUI open of this project, closing out that part of
+  Milestone 14's long-outstanding acceptance criteria). Implemented
+  `EnergyBond` (`scripts/player/energy_bond.gd`) and `PlayerPair`
+  (`scripts/player/player_pair.gd` + `.tscn`), completing the
+  `BreathingController -> OrbitController -> PlayerPair -> EnergyBond` data
+  flow for the pivot. Added a standalone playtest harness
+  (`scripts/player/orbit_prototype.gd`/`.tscn`) so the pair can be run in
+  isolation (Editor F6) without touching `world.tscn`/`main_scene` - the
+  old `Player`/`World` single-entity flow is completely untouched.
+  `tests/test_energy_bond.gd` (14/14) and `tests/test_player_pair.gd`
+  (23/23) added, following the exact conventions of the existing suite.
+  Full suite: **206/206 assertions, 18 files**. A throwaway (uncommitted)
+  headless sanity check separately confirmed `orbit_prototype.tscn` itself
+  instantiates and runs 30 simulated steps without error - entities stay
+  diametrically opposite, the pair rises while "holding," and the bond's
+  geometry/width update correctly.
+  **Not yet done**: nobody has opened `orbit_prototype.tscn` in the Editor
+  GUI and pressed F6 to actually see/feel it run - that's the immediate
+  next step (see NEXT ACTION).
 
 ## COMPLETED
 
@@ -97,42 +120,41 @@ first PC session; prior work was Termux/Ubuntu CLI-only.
 
 ## NOT TESTED
 
-- Godot Editor GUI (deferred to PC) - **this is Milestone 14's own
-  acceptance criteria that cannot be met from this environment.** There is
-  no display server here; only the headless CLI has ever run this
-  project. A PC session opening `project.godot` in the real Editor is the
-  first genuine test of "opens cleanly."
-- Android SDK / export template setup.
+- **`orbit_prototype.tscn` in the Editor GUI** (F6 "Run Current Scene") -
+  headlessly verified only so far; nobody has visually confirmed the two
+  entities orbit correctly, the bond reads well, or hold/release feels
+  responsive.
+- Android SDK / export template setup - still not done on this PC.
 - Everything already flagged as outstanding in Milestones 5, 6, 8, 9, 11,
-  12 (visual/feel verification, autoload-gated code paths, real audio
-  content).
+  12 for the **old** single-Player flow (visual/feel verification,
+  autoload-gated code paths, real audio content) - these are on hold along
+  with Milestones 15/16, not actively being pursued right now.
 
 ## KNOWN ISSUES
 
-- RAM is tight on this device (~700 MiB "available" observed during
-  discovery). Avoid heavy concurrent processes when running Godot.
-- The visual/feel/audio-content backlog (Milestones 5, 6, 8, 9, 11, 12)
-  continues to be the dominant open item, and Milestone 14 confirms it
-  can't be closed from here - it genuinely needs a human on a PC or
-  Android device.
+- `godot4` isn't on PATH on this PC - the downloaded binary lives in an
+  awkwardly-named folder under `Downloads\`. Worked around with a
+  gitignored `.local_bin/godot4` shim (see `docs/setup.md`); worth moving
+  to a stable location eventually.
+- The old single-Player visual/feel/audio-content backlog (Milestones 5,
+  6, 8, 9, 11, 12) is on hold, not resolved - see ROADMAP.md.
 
 ## BLOCKERS
 
-None for continuing code-first development. Opening the project in the
-actual Godot Editor is `BLOCKED — REQUIRES PC` (not a code issue - this
-environment has no display server).
+None. Development is on PC with a working Editor and headless CLI both
+verified functional.
 
 ## NEXT ACTION
 
-Milestone 15 (Visual Integration and Polish) explicitly requires PC and
-cannot be started from here. Milestone 16 (Android Build and Release)
-likewise. At this point, the highest-value next action is for the user to
-actually open this project on a PC (or get Android export tooling sorted)
-and go through the accumulated verification backlog - not to continue
-further code-only milestones, since the remaining ROADMAP items are
-either PC-gated or would be building further on unverified feel.
+Open `scripts/player/orbit_prototype.tscn` in the Godot Editor and press
+F6 ("Run Current Scene") to manually playtest the new two-entity orbit
+pivot: confirm the two entities visibly orbit the shared center, the
+energy bond bows/brightens on hold and relaxes on release, and the pair
+rises while holding / falls while released. Report anything that looks or
+feels wrong before continuing to Milestone 18 (orbital-orientation input,
+obstacles for the pair, wiring `PlayerPair` into `World`).
 
 ## NEXT ENVIRONMENT
 
-`[PC-GODOT]` — this is the natural stopping point for code-first,
-Termux/Ubuntu-only progress until a PC/Android session happens
+`[PC-GODOT]` — continue here; both Editor GUI and headless CLI are
+verified working on this machine.
