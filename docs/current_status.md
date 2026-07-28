@@ -1,10 +1,10 @@
 # Current Status
 
-_Last updated: 2026-07-26_
+_Last updated: 2026-07-28_
 
 ## CURRENT MILESTONE
 
-Milestone 14 — PC Handoff
+Milestone 17 — Gameplay Pivot: Two-Entity Orbit Core (Concept v2)
 
 ## STATUS
 
@@ -28,6 +28,10 @@ Milestone 13 — COMPLETED
 Milestone 14 — PARTIALLY COMPLETED (everything verifiable from Termux/
 Ubuntu is done; opening in the actual Godot Editor GUI is inherently
 untestable from here)
+Milestone 15 — ON HOLD (superseded pending gameplay pivot validation)
+Milestone 16 — ON HOLD (superseded pending gameplay pivot validation)
+Milestone 17 — PARTIALLY COMPLETED (`OrbitController` implemented, bug-fixed,
+and tested; not yet wired into a scene/PlayerPair/EnergyBond)
 
 ## BRANCH
 
@@ -37,6 +41,30 @@ untestable from here)
 
 (pending — this session's commit not yet made at time of writing; see
 `git log` for the actual latest hash)
+
+## PC SESSION — 2026-07-28
+
+Development continues on a Windows 11 PC (Godot 4.7.1 stable win64,
+verified headless via `.local_bin/godot4`, see `docs/setup.md`). This is the
+first PC session; prior work was Termux/Ubuntu CLI-only.
+
+- Verified local repo was already in sync with `origin/main` (`fc5a4f9`, no
+  divergence, nothing to pull).
+- Found `scripts/player/orbit_controller.gd` and
+  `tests/test_orbit_controller.gd` already present in the working tree,
+  fully written, but **never committed on any branch** (confirmed via
+  `git log --all`) — genuine uncommitted work-in-progress toward the new
+  two-entity orbit/energy-bond gameplay direction (see ROADMAP.md
+  Milestone 17). Preserved and verified rather than discarded.
+- Ran the full headless suite for the first time on this PC: found and fixed
+  a real bug in `test_orbit_controller.gd` (illegal `.free()` calls on
+  `RefCounted` objects that silently hung the test runner instead of
+  failing loudly). Full suite now passes: **169/169 assertions, 16 files**.
+- The core gameplay concept is pivoting: from a single-Player vertical-scroll
+  design to "TWO BEINGS. ONE BREATH. ONE ENERGY BOND. ONE ASCENT." — see
+  ROADMAP.md Milestone 17 for what's landed and what's still open
+  (`EnergyBond`, `PlayerPair`, orbital-orientation input, vertical ascent
+  integration, first obstacle pass for the pair).
 
 ## COMPLETED
 

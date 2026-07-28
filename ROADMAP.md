@@ -535,15 +535,20 @@ from here
   not done, not possible from here).
 
 ## Milestone 15 — Visual Integration and Polish
-**Status: NOT STARTED — REQUIRES PC**
+**Status: ON HOLD — superseded pending gameplay pivot validation (see Milestone 17)**
 
 - Objective: Creature/environment art, obstacle visuals, UI layout,
   animation, particles, shaders, lighting, atmosphere, audio mixing, feel
   polish.
 - Environment: `[PC-GODOT]`.
+- Note (2026-07-28): the core gameplay concept is pivoting from the single-
+  Player vertical-scroll design to a two-entity orbit/energy-bond design (see
+  Milestone 17). Polishing the old Player/obstacle visuals is on hold until
+  the new mechanic's vertical slice is validated as fun - polishing a
+  mechanic that may be replaced would be wasted effort.
 
 ## Milestone 16 — Android Build and Release
-**Status: NOT STARTED — REQUIRES PC (or verified on-device export)**
+**Status: ON HOLD — superseded pending gameplay pivot validation (see Milestone 17)**
 
 - Objective: Export template setup, signed APK build, install/run on device,
   manual playtest checklist.
@@ -551,6 +556,56 @@ from here
   On-device export may be attempted from Termux/Ubuntu but is not assumed to
   work until verified (requires Android SDK build-tools + export templates on
   an arm64 Linux host, which is nonstandard).
+- Note (2026-07-28): same hold as Milestone 15 - building/signing an APK of
+  the pre-pivot gameplay is low value right now.
+
+## Milestone 17 — Gameplay Pivot: Two-Entity Orbit Core (Concept v2)
+**Status: PARTIALLY COMPLETED** — `OrbitController` implemented and tested;
+not yet wired into a scene, `PlayerPair`, or `EnergyBond`
+
+- Objective: begin the shift to the new core identity - "TWO BEINGS. ONE
+  BREATH. ONE ENERGY BOND. ONE ASCENT." Two entities orbit a shared center;
+  breathing (hold/release) drives ascent and bond energy; horizontal
+  input orients the pair. This milestone covers only the first, pure-logic
+  piece: the orbit/energy math itself.
+- What landed: `scripts/player/orbit_controller.gd` (`OrbitController`,
+  `RefCounted`) - pure, scene-independent orbit/energy state: `angle`,
+  `angular_velocity`, `radius`, `energy_level`. `compute_angular_velocity()`
+  and `compute_energy_level()` reuse the same `move_toward`-ramp shape as
+  `BreathingController.compute_velocity_y()` (holding ramps toward
+  `+max_angular_speed`/`1.0`, releasing ramps toward
+  `-max_angular_speed`/`0.0`, both clamped without overshoot).
+  `advance(delta, is_holding)` integrates angle/angular_velocity/energy_level
+  together each step. `get_entity_a_offset()`/`get_entity_b_offset()` return
+  each entity's position relative to the shared center (diametrically
+  opposite, `PI` apart, at `radius` distance) - `is_holding` is passed in
+  per-call rather than stored, so `BreathingController` stays the single
+  source of truth for hold/release state. Deliberately has no opinion on
+  world-space center position or rendering - that's `PlayerPair`/`EnergyBond`
+  work (not yet started).
+- Acceptance criteria: angular velocity and energy level ramp toward and
+  clamp at their holding/released targets without overshoot; rapid
+  hold/release immediately reverses ramp direction; entity offsets stay
+  diametrically opposite and exactly `radius` from center at multiple
+  angles. `tests/test_orbit_controller.gd`: 21/21 assertions pass.
+- **Bug found and fixed during PC verification**: the test called `.free()`
+  on `OrbitController` instances, but `OrbitController extends RefCounted` -
+  Godot 4 forbids manually freeing `RefCounted` objects (they're reference-
+  counted, not manually managed like `Node`). This silently hung the entire
+  headless test run - the runtime error aborted the script before it reached
+  `quit()`, so the process never exited (looked like a hang, wasn't one).
+  Removed the erroneous `.free()` calls, matching the no-`.free()` convention
+  every other `RefCounted`-based test already follows (`test_difficulty_curve.gd`,
+  `test_scroll_manager.gd`, `test_obstacle_spawner.gd`, `test_score.gd`).
+  Full suite now passes: 169/169 assertions across 16 files.
+- Not yet done: `EnergyBond` presentation node, `PlayerPair` composition,
+  breathing -> orbit wiring, orbital-orientation input, vertical ascent
+  integration, first obstacle/collision pass for the new pair, PC Editor
+  playtest. Each is its own follow-up milestone/step, not bundled here.
+- Dependencies: reuses `BreathingController`'s existing ramp-shape
+  convention; does not modify `BreathingController` itself yet.
+- Environment: `[PC-GODOT]`. Headless testable: Yes (done, 21/21). Editor
+  GUI/visual verification: not yet done (nothing renders this state yet).
 
 ---
 

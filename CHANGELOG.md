@@ -5,6 +5,33 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Changed
+- **Gameplay direction pivot** (Milestone 17): core concept is shifting from
+  the single-Player vertical-scroll design to a two-entity orbit/energy-bond
+  design - "TWO BEINGS. ONE BREATH. ONE ENERGY BOND. ONE ASCENT." Milestones
+  15 (Visual Polish) and 16 (Android Build) are on hold until the new
+  mechanic's vertical slice is validated; see `ROADMAP.md`.
+- First PC (Windows) development session: verified Godot 4.7.1 stable win64
+  runs headlessly via a new `.local_bin/godot4` shim (gitignored,
+  per-environment, same convention as the existing Termux install);
+  documented in `docs/setup.md`.
+
+### Fixed
+- `tests/test_orbit_controller.gd` called `.free()` on `OrbitController`
+  instances, but `OrbitController extends RefCounted` - Godot 4 forbids
+  manually freeing `RefCounted` objects. This silently hung the headless
+  test runner (the runtime error aborted the script before `quit()`) instead
+  of failing loudly. Removed the erroneous calls, matching every other
+  `RefCounted`-based test's existing convention. Full suite: 169/169
+  assertions, 16 files.
+
+### Added
+- `scripts/player/orbit_controller.gd` (`OrbitController`, `RefCounted`):
+  pure orbit/energy math for the new two-entity gameplay direction -
+  `angle`/`angular_velocity`/`radius`/`energy_level`, ramped via the same
+  `move_toward` shape as `BreathingController.compute_velocity_y()`, plus
+  `get_entity_a_offset()`/`get_entity_b_offset()` for the two entities'
+  positions around a shared center. `tests/test_orbit_controller.gd`
+  (21/21). See ROADMAP.md Milestone 17 for what's landed vs. still open.
 - `docs/pc_handoff.md` refreshed for accuracy (Milestone 14): updated
   stale Milestone 12 references, corrected the `class_name`/`preload()`
   explanation pointer to `docs/development_workflow.md`, added real-audio

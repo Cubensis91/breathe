@@ -92,6 +92,31 @@ but is explicitly deferred — see `docs/android_build.md` and
 `docs/pc_handoff.md`. This is not treated as a blocker for code-first
 development; only for the final export step, which can happen on a PC.
 
+## PC (Windows) — added 2026-07-28
+
+| Item | Value |
+|---|---|
+| Host | Windows 11 Home, PowerShell 5.1 + Git Bash both available |
+| `git --version` | 2.55.0.windows.3 |
+| Godot 4.x binary | `Godot_v4.7.1-stable_win64.exe` downloaded from the official
+  GitHub release, under `Downloads\Godot_v4.7.1-stable_win64.exe\` — note this
+  is a **directory** (the zip's top-level folder kept the `.exe`-looking name),
+  containing `Godot_v4.7.1-stable_win64.exe` and `..._console.exe` inside. Not
+  on `PATH`. |
+| Headless execution | **Verified working**: `Godot_v4.7.1-stable_win64_console.exe --version --headless` → `4.7.1.stable.official.a13da4feb` |
+| `godot4` shim | `.local_bin/godot4` (gitignored, per-environment — same
+  convention as this file already documents) wraps the console binary above,
+  so `scripts_dev/*.sh` run unmodified under Git Bash: add `.local_bin` to
+  `PATH` for the Git Bash session, e.g. `export PATH="$PWD/.local_bin:$PATH"`. |
+| `scripts_dev/*.sh` | Confirmed to run as-is under Git Bash (no Windows-specific changes needed) once the shim above is on `PATH`. |
+| Android SDK / export templates | Not yet set up on this machine — see `docs/android_build.md`, Milestone 16/18. |
+
+**Implication:** unlike the Termux/Ubuntu install, the actual Godot binary
+here isn't at a stable, predictable path — it's wherever the browser download
+landed. Moving/renaming it to a fixed location (and updating `.local_bin/godot4`
+to match) is worth doing before relying on this long-term; flagged here rather
+than done automatically since it touches files outside the repo.
+
 ## Verified Pipeline (Milestone 0)
 
 ```

@@ -34,13 +34,21 @@ Then:
 
 ## Current project state
 
-See `docs/current_status.md` — kept up to date after every session. As of
-this writing, the project is through Milestone 13: there's a complete
-playable loop (tap to start → hold/release to breathe → collide with a
-procedurally-spawned obstacle → die → tap to restart), with score,
-persistence, and audio routing all wired in, and a consolidated 15-file/
-148-assertion headless test suite (`scripts_dev/test.sh`). `world.tscn` is
-`main_scene`.
+See `docs/current_status.md` — kept up to date after every session. Through
+Milestone 13/14 there was a complete playable loop under the original
+single-Player vertical-scroll concept (tap to start → hold/release to
+breathe → collide with a procedurally-spawned obstacle → die → tap to
+restart), with score, persistence, and audio routing all wired in.
+`world.tscn` is still `main_scene`.
+
+**2026-07-28: the core gameplay concept is now pivoting** to a two-entity
+orbit/energy-bond design ("TWO BEINGS. ONE BREATH. ONE ENERGY BOND. ONE
+ASCENT.") — see `ROADMAP.md` Milestone 17 onward for what that means and
+what's landed so far (`OrbitController`, pure and tested). Milestones 15/16
+below (visual polish, Android build) are on hold until the new mechanic's
+vertical slice is validated — read them as historical/deferred, not the
+immediate next step. `docs/current_status.md`'s "PC SESSION" section has the
+latest detail.
 
 This has been verified from a genuine fresh clone (not just the working
 copy this was developed in): `git clone` into a clean directory, then
