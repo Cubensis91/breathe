@@ -41,7 +41,7 @@ of orbit_prototype.tscn not yet done - see NEXT ACTION)
 
 ## LATEST STABLE COMMIT
 
-`8479f5b` — feat: recover and verify OrbitController for two-entity orbit
+`ce6838c` — feat: add EnergyBond and PlayerPair for the two-entity orbit
 pivot (Milestone 17)
 
 ## PC SESSION — 2026-07-28
